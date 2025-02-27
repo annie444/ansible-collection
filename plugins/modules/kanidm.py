@@ -63,9 +63,9 @@ options:
                 required: false
                 type: str
             verify_ca:
-                description: Whether to verify the CA.
-                default: true
-                type: bool
+                description: The path to the CA certificate(s).
+                required: false
+                type: str
             radius_cert_path:
                 description: The path to the RADIUS certificate.
                 required: false
@@ -319,7 +319,7 @@ message:
 
 import asyncio  # noqa: E402
 from dataclasses import dataclass  # noqa: E402
-from typing import Iterable, List, Literal, Optional  # noqa: E402
+from typing import List, Literal, Optional  # noqa: E402
 from enum import StrEnum  # noqa: E402
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
 from ..module_utils.verify import Verify  # noqa: E402
@@ -359,7 +359,7 @@ class KanidmConf:
     username: Optional[str] = None
     password: Optional[str] = None
     ca_cert_data: Optional[str] = None
-    verify_ca: bool = False
+    verify_ca: Optional[str] = None
     radius_cert_path: Optional[str] = None
     radius_cert_data: Optional[str] = None
     radius_key_path: Optional[str] = None
@@ -401,7 +401,7 @@ class KanidmConf:
         if "verify_ca" in kwargs:
             self.verify_ca = Verify(
                 kwargs.get("verify_ca"), "verify_ca"
-            ).verify_default_bool(False)
+            ).verify_opt_str()
         if "radius_cert_path" in kwargs:
             self.radius_cert_path = Verify(
                 kwargs.get("radius_cert_path"), "radius_cert_path"
@@ -485,12 +485,14 @@ class ClientConfig:
 
         # Make sure we have a configuration source
         file_or_config = False
+        file_arg = False
 
         # Set args
         if "file" in kwargs:
             self.file = Verify(kwargs.get("file"), "file").verify_opt_str()
             if self.file is not None:
                 file_or_config = True
+                file_arg = True
         if "uri" in kwargs:
             self.uri = Verify(kwargs.get("uri"), "uri").verify_str()
         else:
@@ -507,16 +509,10 @@ class ClientConfig:
             ).verify_default_bool(False)
         if "ca_path" in kwargs:
             self.ca_path = Verify(kwargs.get("ca_path"), "ca_path").verify_opt_str()
-        if "config" in kwargs:
-            config = Verify(kwargs.get("config"), "config").verify_opt_dict()
-            if config is not None:
-                config.update(
-                    {
-                        **kwargs,
-                    }
-                )
-                self.config = KanidmConf(**config)
-                file_or_config = True
+        if not file_arg:
+            config = kwargs
+            self.config = KanidmConf(**config)
+            file_or_config = True
 
         if not file_or_config:
             raise AttributeError("kanidm file or config is required")
@@ -763,9 +759,9 @@ def run_module():
                     type="str",
                 ),
                 verify_ca=dict(
-                    description="Whether to verify the CA.",
-                    default=True,
-                    type="bool",
+                    description="Path to the CA certificate(s).",
+                    required=False,
+                    type="str",
                 ),
                 radius_cert_path=dict(
                     description="The path to the RADIUS certificate.",
@@ -1074,7 +1070,13 @@ def run_module():
 
     args: KanidmArgs = KanidmArgs(**module.params)
 
-    config = KanidmClientConfig(**args.kanidm.config.__dict__)
+    pre_conf = args.kanidm.config.__dict__
+    post_conf = {}
+    for key, value in pre_conf.items():
+        if value is not None:
+            post_conf[key] = value
+
+    config = KanidmClientConfig(**post_conf)
     client = KanidmClient(config)
 
     try:
