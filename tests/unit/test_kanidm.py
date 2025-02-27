@@ -43,101 +43,8 @@ def fail_json(*args, **kwargs):
     raise AnsibleFailJson(kwargs)
 
 
-def setUpContainer():
-    path = os.environ.get("PATH", "")
-    home = os.environ.get("HOME", "")
-    proc_path: list[Path] = [
-        Path(home) / ".local" / "bin",
-        Path(home) / "bin",
-        Path("/opt/podman/bin"),
-        Path("/opt/homebrew/bin"),
-        Path("/opt/homebrew/sbin"),
-        Path("/usr/local/bin"),
-        Path("/usr/local/sbin"),
-        Path("/usr/bin"),
-        Path("/bin"),
-        Path("/usr/sbin"),
-        Path("/sbin"),
-    ]
-    proc_path.extend([Path(p) for p in list(Path(path).parts)])
-    proc_path = list(set(proc_path))
-    podman = (
-        shutil.which("podman", path=os.pathsep.join([str(p) for p in proc_path]))
-        or "podman"
-    )
-    containers = subprocess.run(
-        podman + " ps --format='{{.Names}}'",
-        shell=True,
-        timeout=60,
-        check=True,
-        executable=os.environ.get("SHELL", "/bin/bash"),
-        user=os.environ.get("USER"),
-        capture_output=True,
-    )
-    running = containers.stdout.decode("utf-8").splitlines()
-    running.extend(containers.stderr.decode("utf-8").splitlines())
-    if "kanidm-test" not in running:
-        subprocess.run(
-            f"{podman} machine init",
-            shell=True,
-            timeout=60,
-            check=False,
-            executable=os.environ.get("SHELL", "/bin/bash"),
-            user=os.environ.get("USER"),
-        )
-        subprocess.run(
-            f"{podman} machine start",
-            shell=True,
-            timeout=60,
-            check=False,
-            executable=os.environ.get("SHELL", "/bin/bash"),
-            user=os.environ.get("USER"),
-        )
-        subprocess.run(
-            f"{podman} run --name=kanidm-test --publish=8443:8443 --volume=kanidm-test-vol:/data:rw --detach --rm docker.io/kanidm/server:latest",
-            shell=True,
-            timeout=60,
-            check=True,
-            executable=os.environ.get("SHELL", "/bin/bash"),
-            user=os.environ.get("USER"),
-        )
-
-
-def tearDownContainer():
-    path = os.environ.get("PATH", "")
-    home = os.environ.get("HOME", "")
-    proc_path: list[Path] = [
-        Path(home) / ".local" / "bin",
-        Path(home) / "bin",
-        Path("/opt/podman/bin"),
-        Path("/opt/homebrew/bin"),
-        Path("/opt/homebrew/sbin"),
-        Path("/usr/local/bin"),
-        Path("/usr/local/sbin"),
-        Path("/usr/bin"),
-        Path("/bin"),
-        Path("/usr/sbin"),
-        Path("/sbin"),
-    ]
-    proc_path.extend([Path(p) for p in list(Path(path).parts)])
-    proc_path = list(set(proc_path))
-    podman = (
-        shutil.which("podman", path=os.pathsep.join([str(p) for p in proc_path]))
-        or "podman"
-    )
-    subprocess.run(
-        f"{podman} stop kanidm-test",
-        shell=True,
-        timeout=60,
-        check=True,
-        executable=os.environ.get("SHELL", "/bin/bash"),
-        user=os.environ.get("USER"),
-    )
-
-
 class TestKanidmModule(unittest.TestCase):
     def setUp(self):
-        setUpContainer()
         self.mock_module_helper = patch.multiple(
             basic.AnsibleModule,
             exit_json=exit_json,
@@ -145,7 +52,6 @@ class TestKanidmModule(unittest.TestCase):
         )
         self.mock_module_helper.start()
         self.addCleanup(self.mock_module_helper.stop)
-        self.addCleanup(tearDownContainer)
 
     def test_module_fail_when_required_args_missing(self):
         with self.assertRaises(AnsibleFailJson):

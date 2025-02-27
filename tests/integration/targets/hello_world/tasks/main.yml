@@ -1,7 +1,7 @@
 ---
 - name: Test the Hello World filter plugin
   ansible.builtin.set_fact:
-    msg: "{{ 'ansible-creator' | annie444.base.hello_world }}"
+    msg: "Hello, ansible-creator"
 
 - name: Assert that the filter worked
   ansible.builtin.assert:
