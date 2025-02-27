@@ -319,7 +319,7 @@ from dataclasses import dataclass  # noqa: E402
 from typing import Iterable, List, Literal, Optional  # noqa: E402
 from enum import StrEnum  # noqa: E402
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
-from ansible.module_utils.verify import Verify  # noqa: E402
+from ..module_utils.verify import Verify  # noqa: E402
 
 from kanidm import KanidmClient  # noqa: E402
 from kanidm.exceptions import (  # noqa: E402
