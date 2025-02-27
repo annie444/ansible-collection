@@ -682,16 +682,14 @@ class KanidmArgs:
 
 
 async def create_basic_client(client: KanidmClient, args: KanidmArgs) -> ClientResponse:
-    valid = await client.check_token_valid()
-    if not valid:
-        if (
-            args.kanidm.config
-            and args.kanidm.config.username
-            and args.kanidm.config.password
-        ):
-            await client.authenticate_password(
-                args.kanidm.config.username, args.kanidm.config.password
-            )
+    if (
+        args.kanidm.config
+        and args.kanidm.config.username
+        and args.kanidm.config.password
+    ):
+        await client.authenticate_password(
+            args.kanidm.config.username, args.kanidm.config.password
+        )
     groups = await client.group_list()
     if args.group not in [g.name for g in groups]:
         await client.group_create(args.group)
