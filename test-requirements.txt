@@ -2,3 +2,5 @@
 pytest-ansible
 pytest-xdist
 molecule
+podman
+python-dotenv

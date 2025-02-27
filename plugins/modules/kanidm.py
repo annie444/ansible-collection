@@ -27,6 +27,10 @@ options:
                 description: The path to the kanidm configuration file.
                 required: false
                 type: "str"
+            uri:
+                description: The URI of the kanidm server.
+                required: true
+                type: str
             token:
                 description: The token to authenticate to the kanidm server.
                 required: false
@@ -312,12 +316,13 @@ message:
 
 import asyncio  # noqa: E402
 from dataclasses import dataclass  # noqa: E402
-from typing import Coroutine, List, Literal, Optional  # noqa: E402
-
+from typing import Iterable, List, Literal, Optional  # noqa: E402
+from enum import StrEnum  # noqa: E402
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
+from ansible.module_utils.verify import Verify  # noqa: E402
 
 from kanidm import KanidmClient  # noqa: E402
-from kanidm.exceptions import (
+from kanidm.exceptions import (  # noqa: E402
     AuthBeginFailed,
     AuthCredFailed,
     AuthInitFailed,
@@ -365,6 +370,96 @@ class KanidmConf:
     radius_clients: Optional[List[RadClient]] = None
     connect_timeout: int = 30
 
+    def __init__(self, **kwargs):
+        if "uri" in kwargs:
+            self.uri = Verify(kwargs.get("uri"), "uri").verify_str()
+        else:
+            raise AttributeError("kanidm uri is required")
+        if "token" in kwargs:
+            self.token = Verify(kwargs.get("token"), "token").verify_opt_str()
+        if "verify_hostnames" in kwargs:
+            self.verify_hostnames = Verify(
+                kwargs.get("verify_hostnames"), "verify_hostnames"
+            ).verify_default_bool(True)
+        if "verify_certificate" in kwargs:
+            self.verify_certificate = Verify(
+                kwargs.get("verify_certificate"), "verify_certificate"
+            ).verify_default_bool(False)
+        if "ca_path" in kwargs:
+            self.ca_path = Verify(kwargs.get("ca_path"), "ca_path").verify_opt_str()
+        if "username" in kwargs:
+            self.username = Verify(kwargs.get("username"), "username").verify_opt_str()
+        if "password" in kwargs:
+            self.password = kwargs.get("password")
+        if "ca_cert_data" in kwargs:
+            self.ca_path = Verify(
+                kwargs.get("ca_cert_data"), "ca_cert_data"
+            ).verify_opt_content()
+        if "verify_ca" in kwargs:
+            self.verify_ca = Verify(
+                kwargs.get("verify_ca"), "verify_ca"
+            ).verify_default_bool(False)
+        if "radius_cert_path" in kwargs:
+            self.radius_cert_path = Verify(
+                kwargs.get("radius_cert_path"), "radius_cert_path"
+            ).verify_opt_str()
+        if "radius_cert_data" in kwargs:
+            self.radius_cert_path = Verify(
+                kwargs.get("radius_cert_data"), "radius_cert_data"
+            ).verify_opt_content()
+        if "radius_key_path" in kwargs:
+            self.radius_key_path = Verify(
+                kwargs.get("radius_key_path"), "radius_key_path"
+            ).verify_opt_str()
+        if "radius_key_data" in kwargs:
+            self.radius_key_path = Verify(
+                kwargs.get("radius_key_data"), "radius_key_data"
+            ).verify_opt_content()
+        if "radius_ca_path" in kwargs:
+            self.radius_ca_path = Verify(
+                kwargs.get("radius_ca_path"), "radius_ca_path"
+            ).verify_opt_str()
+        if "radius_ca_cert_data" in kwargs:
+            self.radius_ca_path = Verify(
+                kwargs.get("radius_ca_cert_data"), "radius_ca_cert_data"
+            ).verify_opt_content()
+        if "radius_ca_dir" in kwargs:
+            self.radius_ca_dir = Verify(
+                kwargs.get("radius_ca_dir"), "radius_ca_dir"
+            ).verify_opt_str()
+        if "radius_required_groups" in kwargs:
+            self.radius_required_groups = Verify(
+                kwargs.get("radius_required_groups"), "radius_required_groups"
+            ).verify_opt_list_str()
+        if "radius_default_vlan" in kwargs:
+            self.radius_default_vlan = Verify(
+                kwargs.get("radius_default_vlan"), "radius_default_vlan"
+            ).verify_opt_int()
+        if "radius_groups" in kwargs:
+            rg = Verify(
+                kwargs.get("radius_groups"), "radius_groups"
+            ).verify_opt_list_dict()
+            if rg is None:
+                self.radius_groups = None
+            else:
+                self.radius_groups = []
+                for group in rg:
+                    self.radius_groups.append(RadGroup(**group))
+        if "radius_clients" in kwargs:
+            rc = Verify(
+                kwargs.get("radius_clients"), "radius_clients"
+            ).verify_opt_list_dict()
+            if rc is None:
+                self.radius_clients = None
+            else:
+                self.radius_clients = []
+                for client in rc:
+                    self.radius_clients.append(RadClient(**client))
+        if "connect_timeout" in kwargs:
+            self.connect_timeout = Verify(
+                kwargs.get("connect_timeout"), "connect_timeout"
+            ).verify_default_int(30)
+
 
 @dataclass
 class ClientConfig:
@@ -377,21 +472,55 @@ class ClientConfig:
     config: Optional[KanidmConf] = None
 
     def __init__(self, **kwargs):
+        # Defaults
+        self.token = None
+        self.verify_hostnames = True
+        self.verify_certificate = False
+        self.ca_path = None
+        self.file = None
+        self.config = None
+
+        # Make sure we have a configuration source
+        file_or_config = False
+
+        # Set args
+        if "file" in kwargs:
+            self.file = Verify(kwargs.get("file"), "file").verify_opt_str()
+            if self.file is not None:
+                file_or_config = True
+        if "uri" in kwargs:
+            self.uri = Verify(kwargs.get("uri"), "uri").verify_str()
+        else:
+            raise AttributeError("kanidm uri is required")
+        if "token" in kwargs:
+            self.token = Verify(kwargs.get("token"), "token").verify_opt_str()
+        if "verify_hostnames" in kwargs:
+            self.verify_hostnames = Verify(
+                kwargs.get("verify_hostnames"), "verify_hostnames"
+            ).verify_default_bool(True)
+        if "verify_certificate" in kwargs:
+            self.verify_certificate = Verify(
+                kwargs.get("verify_certificate"), "verify_certificate"
+            ).verify_default_bool(False)
+        if "ca_path" in kwargs:
+            self.ca_path = Verify(kwargs.get("ca_path"), "ca_path").verify_opt_str()
         if "config" in kwargs:
-            self.config = KanidmConf(
-                uri=kwargs["uri"],
-                token=kwargs["token"],
-                verify_hostnames=kwargs["verify_hostnames"],
-                verify_certificate=kwargs["verify_certificate"],
-                ca_path=kwargs["ca_path"],
-                **kwargs["config"],
-            )
-            del kwargs["config"]
-        super().__init__(**kwargs)
+            config = Verify(kwargs.get("config"), "config").verify_opt_dict()
+            if config is not None:
+                config.update(
+                    {
+                        **kwargs,
+                    }
+                )
+                self.config = KanidmConf(**config)
+                file_or_config = True
+
+        if not file_or_config:
+            raise AttributeError("kanidm file or config is required")
 
 
 @dataclass
-class SubScope:
+class SupScope:
     group: str
     scopes: List[
         Literal[
@@ -413,29 +542,144 @@ class Image:
     format: Literal["png", "jpg", "gif", "svg", "webp", "auto"] = "auto"
 
 
+class Scope(StrEnum):
+    openid = "openid"
+    profile = "profile"
+    email = "email"
+    address = "address"
+    phone = "phone"
+    groups = "groups"
+    ssh_publickeys = "ssh_publickeys"
+
+
+class ClaimJoin(StrEnum):
+    array = "array"
+    csv = "csv"
+    ssv = "ssv"
+
+
+class PrefUsername(StrEnum):
+    spn = "spn"
+    short = "short"
+
+
 @dataclass
 class KanidmArgs:
     name: str
     url: str
     redirect_url: List[str]
-    scopes: List[
-        Literal[
-            "openid", "profile", "email", "address", "phone", "groups", "ssh_publickeys"
-        ]
-    ]
+    scopes: List[Scope]
     kanidm: ClientConfig
     display_name: Optional[str] = None
     group: str = "idm_all_persons"
     public: bool = False
-    claim_join: Literal["array", "csv", "ssv"] = "array"
+    claim_join: ClaimJoin = ClaimJoin.array
     pkce: bool = True
     legacy_crypto: bool = False
     strict_redirect: bool = True
     local_redirect: bool = False
-    username: Literal["spn", "short"] = "spn"
-    sup_scopes: Optional[List[SubScope]] = None
+    username: PrefUsername = PrefUsername.spn
+    sup_scopes: Optional[List[SupScope]] = None
     custom_claims: Optional[List[CustomClaim]] = None
     image: Optional[Image] = None
+
+    def __init__(self, **kwargs):
+        # Defaults
+        self.claim_join = ClaimJoin.array
+        self.pkce = True
+        self.legacy_crypto = False
+        self.strict_redirect = True
+        self.local_redirect = False
+        self.username = PrefUsername.spn
+        self.sup_scopes = None
+        self.custom_claims = None
+        self.image = None
+
+        # Set args
+        if "name" in kwargs:
+            self.name = Verify(kwargs.get("name"), "name").verify_str()
+        else:
+            raise AttributeError("name is required")
+        if "url" in kwargs:
+            self.url = Verify(kwargs.get("url"), "url").verify_str()
+        else:
+            raise AttributeError("url is required")
+        if "redirect_url" in kwargs:
+            self.redirect_url = Verify(
+                kwargs.get("redirect_url"), "redirect_url"
+            ).verify_list_str()
+        else:
+            raise AttributeError("redirect_url is required")
+        if "scopes" in kwargs:
+            self.scopes = [
+                Scope(s)
+                for s in Verify(kwargs.get("scopes"), "scopes").verify_list_str()
+            ]
+        else:
+            raise AttributeError("scopes is required")
+        if "kanidm" in kwargs:
+            self.kanidm = ClientConfig(
+                **Verify(kwargs.get("kanidm"), "kanidm").verify_dict()
+            )
+        else:
+            raise AttributeError("kanidm is required")
+        if "display_name" in kwargs:
+            self.display_name = Verify(
+                kwargs.get("display_name", self.name), "display_name"
+            ).verify_str()
+        if "group" in kwargs:
+            self.group = Verify(kwargs.get("group"), "group").verify_default_str(
+                "idm_all_persons"
+            )
+        if "public" in kwargs:
+            self.public = Verify(kwargs.get("public"), "public").verify_default_bool(
+                False
+            )
+        if "claim_join" in kwargs:
+            self.claim_join = ClaimJoin(
+                Verify(kwargs.get("claim_join"), "claim_join").verify_default_str(
+                    ClaimJoin.array
+                )
+            )
+        if "pkce" in kwargs:
+            self.pkce = Verify(kwargs.get("pkce"), "pkce").verify_default_bool(True)
+        if "legacy_crypto" in kwargs:
+            self.legacy_crypto = Verify(
+                kwargs.get("legacy_crypto"), "legacy_crypto"
+            ).verify_default_bool(False)
+        if "strict_redirect" in kwargs:
+            self.strict_redirect = Verify(
+                kwargs.get("strict_redirect"), "strict_redirect"
+            ).verify_default_bool(True)
+        if "local_redirect" in kwargs:
+            self.local_redirect = Verify(
+                kwargs.get("local_redirect"), "local_redirect"
+            ).verify_default_bool(False)
+        if "username" in kwargs:
+            username = Verify(kwargs.get("username"), "username").verify_default_str(
+                PrefUsername.spn
+            )
+            self.username = PrefUsername(username)
+        if "sup_scopes" in kwargs:
+            sup_scopes: list[dict] | None = Verify(
+                kwargs.get("sup_scopes"), "sup_scopes"
+            ).verify_opt_list_dict()
+            self.sup_scopes = (
+                [SupScope(**scope) for scope in sup_scopes]
+                if sup_scopes is not None
+                else None
+            )
+        if "custom_claims" in kwargs:
+            cc = Verify(
+                kwargs.get("custom_claims"), "custom_claims"
+            ).verify_opt_list_dict()
+            if cc is None:
+                self.custom_claims = None
+            else:
+                self.custom_claims = [CustomClaim(**claim) for claim in cc]
+        if "image" in kwargs:
+            img = Verify(kwargs.get("image"), "image").verify_opt_dict()
+            self.image = Image(**img) if img is not None else None
 
 
 async def create_basic_client(client: KanidmClient, args: KanidmArgs) -> ClientResponse:
@@ -470,6 +714,11 @@ def run_module():
             required=True,
             type="dict",
             options=dict(
+                uri=dict(
+                    description="The URI of the kanidm server.",
+                    required=True,
+                    type="str",
+                ),
                 file=dict(
                     description="The path to the kanidm configuration file.",
                     required=False,
@@ -822,18 +1071,8 @@ def run_module():
 
     args: KanidmArgs = KanidmArgs(**module.params)
 
-    if args.kanidm.file:
-        client = KanidmClient(
-            config_file=args.kanidm.file,
-            uri=args.kanidm.uri,
-            token=args.kanidm.token,
-            verify_hostnames=args.kanidm.verify_hostnames,
-            verify_certificate=args.kanidm.verify_certificate,
-            ca_path=args.kanidm.ca_path,
-        )
-    else:
-        config = KanidmClientConfig(**args.kanidm.config.__dict__)
-        client = KanidmClient(config)
+    config = KanidmClientConfig(**args.kanidm.config.__dict__)
+    client = KanidmClient(config)
 
     try:
         run = asyncio.run(create_basic_client(client, args))
@@ -844,7 +1083,7 @@ def run_module():
     except AuthCredFailed:
         module.fail_json(msg="Incorrect username or password.", **result)
     except AuthInitFailed:
-        module.fail_json(msg="Unable to initalize authentication", **result)
+        module.fail_json(msg="Unable to initialize authentication", **result)
     except AuthMechUnknown:
         module.fail_json(msg="Unable to determine authentication mechanism", **result)
     except ServerURLNotSet:
