@@ -17,6 +17,9 @@ version_added: "1.0.0"
 
 description: This module creates an OAuth client in kanidm.
 
+requirements:
+    - pykanidm>=1.0.0
+
 options:
     kanidm:
         description: The parameters used to connect to the Kanidm server.

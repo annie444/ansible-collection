@@ -21,16 +21,10 @@ filterwarnings = ['ignore:AnsibleCollectionFinder has already been configured']
 testpaths = ["tests"]
 
 [dependency-groups]
-test = [
-    "molecule>=25.3.1",
-    "podman>=5.4.0.1",
-    "pytest-ansible>=25.1.0",
-    "pytest-xdist>=3.6.1",
-    "python-dotenv>=1.0.1",
-]
+test = ["molecule>=25.3.1", "pytest-ansible>=25.1.0", "pytest-xdist>=3.6.1"]
 
 [tool.tox.env_run_base]
-pass_env = [    
+pass_env = [
     "CONTAINER_HOST",
     "DOCKER_HOST",
     "CONTAINER_TLS_VERIFY",
@@ -44,6 +38,14 @@ pass_env = [
     "CONTAINER_CONNECTION",
     "DOCKER_CONNECTION",
     "CONTAINER_AGENT",
-    "DOCKER_AGENT"]
+    "DOCKER_AGENT",
+]
 [tool.tox.ansible]
-pass_env = ["CONTAINER_HOST", "DOCKER_HOST", "CONTAINER_SSL_VERIFY", "CONTAINER_TLS_VERIFY", "DOCKER_SSL_VERIFY", "DOCKER_TLS_VERIFY"]
+pass_env = [
+    "CONTAINER_HOST",
+    "DOCKER_HOST",
+    "CONTAINER_SSL_VERIFY",
+    "CONTAINER_TLS_VERIFY",
+    "DOCKER_SSL_VERIFY",
+    "DOCKER_TLS_VERIFY",
+]
