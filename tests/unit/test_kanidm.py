@@ -125,7 +125,7 @@ class TestKanidmModule(unittest.TestCase):
                     "url": "https://testexistingclient.local",
                     "redirect_url": ["https://testexistingclient.local/callback"],
                     "scopes": ["openid", "profile", "email"],
-                    "sup_scope": [
+                    "sup_scopes": [
                         {
                             "group": "idm_admins",
                             "scopes": ["openid", "profile", "email"],
