@@ -55,7 +55,7 @@ class TestKanidmModule(unittest.TestCase):
             kanidm.main()
 
     def test_kanidm_auth_succeeds(self):
-        with self.assertRaises(AnsibleFailJson):
+        with self.assertRaises(AnsibleExitJson):
             set_module_args(
                 {
                     "kanidm": {
@@ -136,20 +136,21 @@ class TestKanidmModule(unittest.TestCase):
             kanidm.main()
 
     def test_kanidm_creates_client_with_different_group(self):
-        set_module_args(
-            {
-                "kanidm": {
-                    "uri": "https://localhost:8443",
-                    "username": "idm_admin",
-                    "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
-                    "verify_ca": False,
-                },
-                "name": "test_different_group",
-                "display_name": "Test different group",
-                "url": "https://testdifferentgroup.local",
-                "group": "idm_admins",
-                "redirect_url": ["https://testdifferentgroup.local/callback"],
-                "scopes": ["openid", "profile", "email"],
-            }
-        )
-        kanidm.main()
+        with self.assertRaises(AnsibleExitJson):
+            set_module_args(
+                {
+                    "kanidm": {
+                        "uri": "https://localhost:8443",
+                        "username": "idm_admin",
+                        "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
+                        "verify_ca": False,
+                    },
+                    "name": "test_different_group",
+                    "display_name": "Test different group",
+                    "url": "https://testdifferentgroup.local",
+                    "group": "idm_admins",
+                    "redirect_url": ["https://testdifferentgroup.local/callback"],
+                    "scopes": ["openid", "profile", "email"],
+                }
+            )
+            kanidm.main()
