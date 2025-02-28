@@ -17,13 +17,15 @@ def set_module_args(args):
 class AnsibleExitJson(Exception):
     """Exception class to be raised by module.exit_json and caught by the test case"""
 
-    pass
+    def __init__(self, data):
+        self.data = data
 
 
 class AnsibleFailJson(Exception):
     """Exception class to be raised by module.fail_json and caught by the test case"""
 
-    pass
+    def __init__(self, data):
+        self.data = data
 
 
 def exit_json(*args, **kwargs):
@@ -55,7 +57,7 @@ class TestKanidmModule(unittest.TestCase):
             kanidm.main()
 
     def test_kanidm_auth_succeeds(self):
-        with self.assertRaises(AnsibleExitJson):
+        with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
                     "kanidm": {
@@ -72,9 +74,14 @@ class TestKanidmModule(unittest.TestCase):
                 }
             )
             kanidm.main()
+            raised = ej.exception
+        self.assertEqual(raised.data["changed"], True)
+        self.assertIsInstance(raised.data["secret"], str)
+        self.assertTrue(len(raised.data["secret"]) > 0)
+        self.assertEqual(raised.data["message"].lower(), "success")
 
     def test_kanidm_creates_client_if_not_exists(self):
-        with self.assertRaises(AnsibleExitJson):
+        with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
                     "kanidm": {
@@ -91,9 +98,14 @@ class TestKanidmModule(unittest.TestCase):
                 }
             )
             kanidm.main()
+            raised = ej.exception
+        self.assertEqual(raised.data["changed"], True)
+        self.assertIsInstance(raised.data["secret"], str)
+        self.assertTrue(len(raised.data["secret"]) > 0)
+        self.assertEqual(raised.data["message"].lower(), "success")
 
     def test_kanidm_updates_client_if_exists(self):
-        with self.assertRaises(AnsibleExitJson):
+        with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
                     "kanidm": {
@@ -110,8 +122,13 @@ class TestKanidmModule(unittest.TestCase):
                 }
             )
             kanidm.main()
+            raised = ej.exception
+        self.assertEqual(raised.data["changed"], True)
+        self.assertIsInstance(raised.data["secret"], str)
+        self.assertTrue(len(raised.data["secret"]) > 0)
+        self.assertEqual(raised.data["message"].lower(), "success")
 
-        with self.assertRaises(AnsibleExitJson):
+        with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
                     "kanidm": {
@@ -134,9 +151,14 @@ class TestKanidmModule(unittest.TestCase):
                 }
             )
             kanidm.main()
+            raised = ej.exception
+        self.assertEqual(raised.data["changed"], True)
+        self.assertIsInstance(raised.data["secret"], str)
+        self.assertTrue(len(raised.data["secret"]) > 0)
+        self.assertEqual(raised.data["message"].lower(), "success")
 
     def test_kanidm_creates_client_with_different_group(self):
-        with self.assertRaises(AnsibleExitJson):
+        with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
                     "kanidm": {
@@ -154,3 +176,8 @@ class TestKanidmModule(unittest.TestCase):
                 }
             )
             kanidm.main()
+            raised = ej.exception
+        self.assertEqual(raised.data["changed"], True)
+        self.assertIsInstance(raised.data["secret"], str)
+        self.assertTrue(len(raised.data["secret"]) > 0)
+        self.assertEqual(raised.data["message"].lower(), "success")
