@@ -5,9 +5,12 @@ import yaml
 import tempfile
 import requests
 
-from ansible.module_utils.ansible_specs import AnsibleArgumentSpec, OptionType
-from ansible.module_utils.verify import Verify
-from ansible.module_utils.kanidm_runner import (
+from ansible_collections.annie444.base.plugins.module_utils.ansible_specs import (
+    AnsibleArgumentSpec,
+    OptionType,
+)
+from ansible_collections.annie444.base.plugins.module_utils.verify import Verify
+from ansible_collections.annie444.base.plugins.module_utils.kanidm_runner import (
     KanidmException,
     KanidmModuleError,
     KanidmRequiredOptionError,
