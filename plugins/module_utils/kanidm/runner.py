@@ -20,6 +20,14 @@ class Kanidm(object):
         self.response: Response | None = None
         self.json: Dict | None = None
         self.token: str | None = None
+        self.verify: bool | str = self.args.kanidm.verify_ca
+        if self.args.kanidm.ca_path is not None:
+            if self.args.kanidm.ca_path.is_file():
+                self.verify = str(
+                    self.args.kanidm.ca_path.expanduser().absolute().parent
+                )
+            else:
+                self.verify = str(self.args.kanidm.ca_path.expanduser().absolute())
 
     def set_headers(self, with_auth: bool = True):
         self.session.headers.clear()
@@ -141,7 +149,7 @@ class Kanidm(object):
             return
         else:
             raise KanidmAuthenticationFailure(
-                f"Authentication failed: {self._response.status_code} {self._response.reason} {self._response.text}"
+                f"Authentication failed: {self.response.status_code} {self.response.reason} {self.response.text}"
             )
 
     def check_token(self) -> bool:
@@ -149,8 +157,10 @@ class Kanidm(object):
             raise KanidmArgsException("No token specified")
         self.set_headers()
         self.session.cookies.clear_expired_cookies()
-        self._response = self.session.get(f"{self.args.kanidm.uri}/v1/auth/valid")
-        if self._response.status_code == 200:
+        self.response = self.session.get(
+            f"{self.args.kanidm.uri}/v1/auth/valid", verify=self.verify
+        )
+        if self.response.status_code == 200:
             self.token = self.args.kanidm.token
             return True
         return False
@@ -163,6 +173,7 @@ class Kanidm(object):
 
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/auth",
+            verify=self.verify,
             json={
                 "step": {
                     "init2": {
@@ -188,6 +199,7 @@ class Kanidm(object):
 
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/auth",
+            verify=self.verify,
             json={
                 "step": {
                     "begin": "password",
@@ -209,6 +221,7 @@ class Kanidm(object):
 
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/auth",
+            verify=self.verify,
             json={
                 "step": {
                     "cred": {
@@ -240,6 +253,7 @@ class Kanidm(object):
         self.set_headers()
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/oauth2/_basic",
+            verify=self.verify,
             json={
                 "attrs": {
                     "name": self.args.name,
@@ -258,7 +272,8 @@ class Kanidm(object):
 
         self.set_headers()
         self.response = self.session.get(
-            f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}"
+            f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}",
+            verify=self.verify,
         )
 
         return self.verify_response()
@@ -276,6 +291,7 @@ class Kanidm(object):
         self.set_headers()
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/oauth2/_public",
+            verify=self.verify,
             json={
                 "attrs": {
                     "name": self.args.name,
@@ -299,6 +315,7 @@ class Kanidm(object):
         self.set_headers()
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_scopemap/{self.args.group}",
+            verify=self.verify,
             json=self.args.scopes,
         )
 
@@ -314,6 +331,7 @@ class Kanidm(object):
             self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_sup_scopemap/{self.args.sup_scopes[index].group}",
+                verify=self.verify,
                 json=self.args.sup_scopes[index].scopes,
             )
 
@@ -322,6 +340,7 @@ class Kanidm(object):
                 self.set_headers()
                 self.response = self.session.post(
                     f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_sup_scopemap/{sup_scope.group}",
+                    verify=self.verify,
                     json=sup_scope.scopes,
                 )
                 if not self.verify_response():
@@ -346,6 +365,7 @@ class Kanidm(object):
         with open(self.args.image.src, "rb") as f:
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_image",
+                verify=self.verify,
                 files={f"{self.args.name}.{self.args.image.format.value}": f},
             )
 
@@ -358,6 +378,7 @@ class Kanidm(object):
         self.set_headers()
         self.response = self.session.patch(
             f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}",
+            verify=self.verify,
             json={
                 "attrs": attrs,
             },
@@ -431,6 +452,7 @@ class Kanidm(object):
             self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/_claimmap/{self.args.name}/{self.args.group}",
+                verify=self.verify,
                 json=c.values,
             )
             if not self.verify_response():
@@ -449,6 +471,7 @@ class Kanidm(object):
             self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_claimmap/{self.args.claim_join}",
+                verify=self.verify,
                 json=c.values,
             )
             if not self.verify_response():
@@ -466,6 +489,7 @@ class Kanidm(object):
             self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_attr/oauth2_rs_origin",
+                verify=self.verify,
                 json=[url],
             )
             if not self.verify_response():

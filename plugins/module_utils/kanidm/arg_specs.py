@@ -4,6 +4,7 @@ from enum import StrEnum
 import yaml
 import tempfile
 import requests
+from pathlib import Path
 
 from ..ansible_specs import (
     AnsibleArgumentSpec,
@@ -71,11 +72,11 @@ class PrefUsername(StrEnum):
 class KanidmConf:
     uri: str
     token: Optional[str] = None
-    ca_path: Optional[str] = None
+    ca_path: Optional[Path] = None
     username: Optional[str] = None
     password: Optional[str] = None
     ca_cert_data: Optional[str] = None
-    verify_ca: Optional[str] = None
+    verify_ca: bool = True
     connect_timeout: int = 30
 
     def __init__(self, **kwargs):
@@ -87,7 +88,9 @@ class KanidmConf:
             if "token" in kwargs:
                 self.token = Verify(kwargs.get("token"), "token").verify_opt_str()
             if "ca_path" in kwargs:
-                self.ca_path = Verify(kwargs.get("ca_path"), "ca_path").verify_opt_str()
+                self.ca_path = Verify(
+                    kwargs.get("ca_path"), "ca_path"
+                ).verify_opt_path()
             if "username" in kwargs:
                 self.username = Verify(
                     kwargs.get("username"), "username"
@@ -97,11 +100,11 @@ class KanidmConf:
             if "ca_cert_data" in kwargs:
                 self.ca_path = Verify(
                     kwargs.get("ca_cert_data"), "ca_cert_data"
-                ).verify_opt_content()
+                ).verify_opt_content_as_path()
             if "verify_ca" in kwargs:
                 self.verify_ca = Verify(
                     kwargs.get("verify_ca"), "verify_ca"
-                ).verify_opt_str()
+                ).verify_default_bool(True)
             if "connect_timeout" in kwargs:
                 self.connect_timeout = Verify(
                     kwargs.get("connect_timeout"), "connect_timeout"
@@ -112,6 +115,10 @@ class KanidmConf:
             raise KanidmArgsException(str(e), e)
         except AttributeError as e:
             raise KanidmRequiredOptionError(str(e), e)
+        except FileNotFoundError as e:
+            raise KanidmArgsException(str(e), e)
+        except Exception as e:
+            raise e
 
     @staticmethod
     def valid_args() -> FrozenSet[str]:
@@ -169,9 +176,10 @@ class KanidmConf:
                 "documentation": "The CA certificate data as a base64 encoded string.",
             },
             "verify_ca": {
-                "type": OptionType.PATH,
+                "type": OptionType.BOOL,
                 "required": False,
-                "documentation": "The CA to use to verify the Kanidm server against.",
+                "default": True,
+                "documentation": "Whether to verify the Kanidm server's certificate chain.",
             },
             "connect_timeout": {
                 "type": OptionType.INT,
@@ -387,8 +395,9 @@ class Image:
             return "\n".join(values)
         return yaml.dump(Image.arg_spec(), sort_keys=False)
 
-    def get(self):
+    def get(self) -> Path:
         src = self.src
+        dest = Path()
 
         if self.format == ImageFormat.auto:
             if self.src.endswith(".png"):
@@ -412,10 +421,13 @@ class Image:
             if response.status_code == 200:
                 with open(temp, "wb") as f:
                     f.write(response.content)
+
             else:
                 raise KanidmModuleError(f"Failed to download image from {self.src}")
-
             self.src = temp
+            dest = Path(temp)
+        else:
+            dest = Path(self.src)
 
         if self.format == ImageFormat.auto:
             header: list[bytes] = []
@@ -505,6 +517,7 @@ class Image:
 
         if self.format == ImageFormat.auto:
             raise KanidmException(f"Unknown image format for {src}")
+        return dest
 
 
 @dataclass
@@ -631,6 +644,8 @@ class KanidmArgs:
             raise KanidmArgsException(str(e), e)
         except AttributeError as e:
             raise KanidmRequiredOptionError(str(e), e)
+        except FileNotFoundError as e:
+            raise KanidmArgsException(str(e), e)
         except Exception as e:
             raise e
 

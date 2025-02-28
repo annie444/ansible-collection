@@ -1,3 +1,4 @@
+from pathlib import Path
 import tempfile
 from base64 import b64decode
 from typing import Any
@@ -143,6 +144,16 @@ class Verify:
         else:
             return self.value
 
+    def verify_opt_path(self) -> Path | None:
+        val = self.verify_opt_str()
+        if val is None:
+            return None
+        path = Path(val)
+        if not path.exists():
+            raise FileNotFoundError(f"{self.name} does not exist")
+        else:
+            return path
+
     def verift_opt_str_as_str(self) -> str:
         ret = self.verify_opt_str()
         if ret is None:
@@ -273,6 +284,13 @@ class Verify:
         else:
             return self.value
 
+    def verify_path(self) -> Path:
+        path = Path(self.verify_str())
+        if not path.exists():
+            raise FileNotFoundError(f"{self.name} does not exist")
+        else:
+            return path
+
     def verify_int(self) -> int:
         if self.value is None:
             raise AttributeError(f"{self.name} must not be None")
@@ -350,6 +368,15 @@ class Verify:
             header.append(bytes([list(content)[i]]))
         return decode_file(content, header)
 
+    def verify_opt_content_as_path(self) -> Path | None:
+        val = self.verify_opt_content()
+        if val is None:
+            return None
+        path = Path(val)
+        if not path.exists():
+            raise FileNotFoundError(f"{self.name} does not exist")
+        return path
+
     def verify_content(self) -> str:
         if self.value is None:
             raise AttributeError(f"{self.name} must be defined")
@@ -361,3 +388,10 @@ class Verify:
         for i in range(0, 6):
             header.append(bytes([list(content)[i]]))
         return decode_file(content, header)
+
+    def verify_content_as_path(self) -> Path:
+        path = Path(self.verify_content())
+        if not path.exists():
+            raise FileNotFoundError(f"{self.name} does not exist")
+        else:
+            return path
