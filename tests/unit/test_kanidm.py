@@ -1,9 +1,5 @@
-import subprocess
-import shutil
 import json
 import unittest
-import os
-from pathlib import Path
 
 from ansible_collections.annie444.base.plugins.modules import kanidm
 
@@ -59,45 +55,89 @@ class TestKanidmModule(unittest.TestCase):
             kanidm.main()
 
     def test_kanidm_auth_succeeds(self):
-        set_module_args(
-            {
-                "kanidm": {
-                    "uri": "https://localhost:8443",
-                    "username": "idm_admin",
-                    "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
-                    "verify_hostnames": "false",
-                    "verify_certificate": "false",
-                },
-                "name": "test_one",
-                "display_name": "Test 1",
-                "url": "https://test1.local",
-                "redirect_url": ["https://test1.local/callback"],
-                "scopes": ["openid", "profile", "email"],
-            }
-        )
-        kanidm.main()
+        with self.assertRaises(AnsibleFailJson):
+            set_module_args(
+                {
+                    "kanidm": {
+                        "uri": "https://localhost:8443",
+                        "username": "idm_admin",
+                        "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
+                    },
+                    "name": "test_one",
+                    "display_name": "Test 1",
+                    "url": "https://test1.local",
+                    "redirect_url": ["https://test1.local/callback"],
+                    "scopes": ["openid", "profile", "email"],
+                }
+            )
+            kanidm.main()
 
-    def test_kanidm_creates_group_if_not_exists(self):
-        set_module_args(
-            {
-                "kanidm": {
-                    "uri": "https://localhost:8443",
-                    "username": "idm_admin",
-                    "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
-                    "verify_hostnames": "false",
-                    "verify_certificate": "false",
-                },
-                "name": "test_two",
-                "display_name": "Test 2",
-                "url": "https://test2.local",
-                "group": "test_group",
-                "redirect_url": ["https://test2.local/callback"],
-                "scopes": ["openid", "profile", "email"],
-            }
-        )
-        kanidm.main()
+    def test_kanidm_creates_client_if_not_exists(self):
+        with self.assertRaises(AnsibleExitJson):
+            set_module_args(
+                {
+                    "kanidm": {
+                        "uri": "https://localhost:8443",
+                        "username": "idm_admin",
+                        "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
+                        "verify_hostnames": "false",
+                        "verify_certificate": "false",
+                    },
+                    "name": "test_nonexistet_client",
+                    "display_name": "Created client when not exists",
+                    "url": "https://testnonexistetclient.local",
+                    "redirect_url": ["https://testnonexistetclient.local/callback"],
+                    "scopes": ["openid", "profile", "email"],
+                }
+            )
+            kanidm.main()
 
-    def test_kanidm_creates_group_if_exists(self):
+    def test_kanidm_updates_client_if_exists(self):
+        with self.assertRaises(AnsibleExitJson):
+            set_module_args(
+                {
+                    "kanidm": {
+                        "uri": "https://localhost:8443",
+                        "username": "idm_admin",
+                        "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
+                        "verify_hostnames": "false",
+                        "verify_certificate": "false",
+                    },
+                    "name": "test_existing_client",
+                    "display_name": "Test existing client",
+                    "url": "https://testexistingclient.local",
+                    "redirect_url": ["https://testexistingclient.local/callback"],
+                    "scopes": ["openid", "profile", "email"],
+                }
+            )
+            kanidm.main()
+
+        with self.assertRaises(AnsibleExitJson):
+            set_module_args(
+                {
+                    "kanidm": {
+                        "uri": "https://localhost:8443",
+                        "username": "idm_admin",
+                        "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
+                        "verify_hostnames": "false",
+                        "verify_certificate": "false",
+                    },
+                    "name": "test_existing_client",
+                    "display_name": "Test existing client",
+                    "url": "https://testexistingclient.local",
+                    "redirect_url": ["https://testexistingclient.local/callback"],
+                    "scopes": ["openid", "profile", "email"],
+                    "sup_scope": [
+                        {
+                            "group": "idm_admins",
+                            "scopes": ["openid", "profile", "email"],
+                        }
+                    ],
+                }
+            )
+            kanidm.main()
+
+    def test_kanidm_creates_client_with_different_group(self):
         set_module_args(
             {
                 "kanidm": {
@@ -107,11 +147,11 @@ class TestKanidmModule(unittest.TestCase):
                     "verify_hostnames": "false",
                     "verify_certificate": "false",
                 },
-                "name": "test_three",
-                "display_name": "Test 3",
-                "url": "https://test3.local",
+                "name": "test_different_group",
+                "display_name": "Test different group",
+                "url": "https://testdifferentgroup.local",
                 "group": "idm_admins",
-                "redirect_url": ["https://test3.local/callback"],
+                "redirect_url": ["https://testdifferentgroup.local/callback"],
                 "scopes": ["openid", "profile", "email"],
             }
         )

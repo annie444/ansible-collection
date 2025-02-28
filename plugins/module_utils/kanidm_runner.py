@@ -1,8 +1,6 @@
-import tempfile
 from typing import Optional, Any, Dict
-
 from requests import Response
-from .arg_specs import KanidmArgs, PrefUsername
+from ansible.module_utils.arg_specs import KanidmArgs, PrefUsername
 from ansible.errors import (
     AnsibleError,
     AnsibleOptionsError,

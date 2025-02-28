@@ -16,7 +16,7 @@ from ansible.module_utils.common.validation import (
     check_type_dict,
 )
 
-from .kanidm import (
+from ansible.module_utils.kanidm_runner import (
     KanidmException,
     KanidmModuleError,
     KanidmRequiredOptionError,
