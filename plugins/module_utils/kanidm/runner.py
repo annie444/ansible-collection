@@ -129,7 +129,7 @@ class Kanidm(object):
                 )
 
     def verify_response(self) -> bool:
-        if self.response != 200:
+        if self.response.status_code < 200 and self.response.status_code >= 300:
             return False
 
         self.json = self.response.json()
