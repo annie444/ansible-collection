@@ -122,7 +122,7 @@ def run_module():
         module.fail_json(msg=f"Unexpected error: {e}", **result)
 
     try:
-        kanidm.run()
+        result["secret"] = kanidm.create_oauth_client()
     except KanidmArgsException as e:
         module.fail_json(msg=f"Error parsing arguments: {e}", **result)
     except KanidmRequiredOptionError as e:

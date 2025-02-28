@@ -1,4 +1,4 @@
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, List
 from requests import Response
 from .arg_specs import (
     KanidmArgs,
@@ -20,6 +20,7 @@ class Kanidm(object):
         self.response: Response | None = None
         self.json: Dict | None = None
         self.token: str | None = None
+        self.text: str | None = None
         self.verify: bool | str = self.args.kanidm.verify_ca
         if self.args.kanidm.ca_path is not None:
             if self.args.kanidm.ca_path.is_file():
@@ -46,7 +47,7 @@ class Kanidm(object):
             f"{self.response.status_code} {self.response.reason} {self.response.text}"
         )
 
-    def run(self):
+    def create_oauth_client(self):
         self.authenticate()
         if not self.check_token():
             raise KanidmAuthenticationFailure(
@@ -128,11 +129,24 @@ class Kanidm(object):
                     f"Unable to update custom claim join for client {self.args.name}. Got {self.error}"
                 )
 
+        if not self.get_client_secret():
+            raise KanidmException(
+                f"Unable to get client secret for client {self.args.name}. Got {self.error}"
+            )
+
+        if self.text is None:
+            raise KanidmException(
+                f"Unable to parse the client secret for client {self.args.name}. Got {self.text}"
+            )
+
+        return self.text
+
     def verify_response(self) -> bool:
         if self.response.status_code < 200 and self.response.status_code >= 300:
             return False
 
         self.json = self.response.json()
+        self.text = self.response.text
         return True
 
     def authenticate(self):
@@ -258,10 +272,12 @@ class Kanidm(object):
             verify=self.verify,
             json={
                 "attrs": {
-                    "name": self.args.name,
-                    "displayname": self.args.display_name,
-                    "oauth2_rs_origin_landing": self.args.url,
-                    "oauth2_strict_redirect_uri": self.args.strict_redirect,
+                    "name": [self.args.name],
+                    "displayname": [self.args.display_name],
+                    "oauth2_rs_origin_landing": [self.args.url],
+                    "oauth2_strict_redirect_uri": [
+                        str(self.args.strict_redirect).lower()
+                    ],
                 }
             },
         )
@@ -296,10 +312,12 @@ class Kanidm(object):
             verify=self.verify,
             json={
                 "attrs": {
-                    "name": self.args.name,
-                    "displayname": self.args.display_name,
-                    "oauth2_rs_origin_landing": self.args.url,
-                    "oauth2_strict_redirect_uri": self.args.strict_redirect,
+                    "name": [self.args.name],
+                    "displayname": [self.args.display_name],
+                    "oauth2_rs_origin_landing": [self.args.url],
+                    "oauth2_strict_redirect_uri": [
+                        str(self.args.strict_redirect).lower()
+                    ],
                 }
             },
         )
@@ -373,7 +391,7 @@ class Kanidm(object):
 
         return self.verify_response()
 
-    def patch(self, attrs: Dict[str, Any]) -> bool:
+    def patch_oauth(self, attrs: Dict[str, List[str]]) -> bool:
         if self.args.name is None:
             raise KanidmRequiredOptionError("No name specified")
 
@@ -392,7 +410,7 @@ class Kanidm(object):
         if self.args.pkce is None:
             raise KanidmRequiredOptionError("No PKCE specified")
 
-        return self.patch(
+        return self.patch_oauth(
             {
                 "oauth2_allow_insecure_client_disable_pkce": [
                     str(self.args.pkce).lower()
@@ -404,7 +422,7 @@ class Kanidm(object):
         if self.args.legacy_crypto is None:
             raise KanidmRequiredOptionError("No legacy crypto specified")
 
-        return self.patch(
+        return self.patch_oauth(
             {
                 "oauth2_jwt_legacy_crypto_enable": [
                     str(self.args.legacy_crypto).lower()
@@ -416,7 +434,7 @@ class Kanidm(object):
         if self.args.username is None:
             raise KanidmRequiredOptionError("No username specified")
 
-        return self.patch(
+        return self.patch_oauth(
             {
                 "oauth2_prefer_short_username": [
                     str(self.args.username == PrefUsername.short).lower()
@@ -428,7 +446,7 @@ class Kanidm(object):
         if self.args.local_redirect is None:
             raise KanidmRequiredOptionError("No localhost redirect specified")
 
-        return self.patch(
+        return self.patch_oauth(
             {"oauth2_allow_localhost_redirect": [str(self.args.local_redirect).lower()]}
         )
 
@@ -436,7 +454,7 @@ class Kanidm(object):
         if self.args.strict_redirect is None:
             raise KanidmRequiredOptionError("No strict redirect specified")
 
-        return self.patch(
+        return self.patch_oauth(
             {
                 "oauth2_strict_redirect_uri": [str(self.args.strict_redirect).lower()],
             }
@@ -497,3 +515,15 @@ class Kanidm(object):
             if not self.verify_response():
                 return False
         return True
+
+    def get_client_secret(self) -> bool:
+        if self.args.name is None:
+            raise KanidmRequiredOptionError("No name specified")
+
+        self.set_headers()
+        self.response = self.session.get(
+            f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_basic_secret",
+            verify=self.verify,
+        )
+
+        return self.verify_response()
