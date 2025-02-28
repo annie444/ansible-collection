@@ -663,12 +663,10 @@ class KanidmArgs:
 
     @staticmethod
     def arg_spec() -> AnsibleArgumentSpec:
-        kanidm = {f"kanidm.{k}": v for k, v in KanidmConf.arg_spec().items()}
-        sup_scopes = {f"sup_scopes.{k}": v for k, v in SupScope.arg_spec().items()}
-        custom_claims = {
-            f"custom_claims.{k}": v for k, v in CustomClaim.arg_spec().items()
-        }
-        image = {f"image.{k}": v for k, v in Image.arg_spec().items()}
+        kanidm = KanidmConf.arg_spec()
+        sup_scopes = SupScope.arg_spec()
+        custom_claims = CustomClaim.arg_spec()
+        image = Image.arg_spec()
         return {
             "name": {
                 "type": OptionType.STR,

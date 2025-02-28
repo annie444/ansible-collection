@@ -17,16 +17,20 @@ class Kanidm(object):
     def __init__(self, args: KanidmArgs):
         self.args: KanidmArgs = args
         self.session = Session()
+        self.response: Response | None = None
+        self.json: Dict | None = None
+        self.token: str | None = None
+
+    def set_headers(self, with_auth: bool = True):
+        self.session.headers.clear()
         self.session.headers["User-Agent"] = "Ansible-Kanidm"
-        self.session.headers["Accept"] = "application/json"
         self.session.headers["Content-Type"] = "application/json"
         self.session.headers["Cache-Control"] = "no-cache"
         self.session.headers["Accept"] = "*/*"
         self.session.headers["Accept-Encoding"] = "gzip, deflate, br"
         self.session.headers["Connection"] = "keep-alive"
-        self.response: Response | None = None
-        self.json: Dict | None = None
-        self.token: str | None = None
+        if with_auth:
+            self.session.headers["Authorization"] = f"Bearer {self.token}"
 
     @property
     def error(self) -> str:
@@ -143,19 +147,18 @@ class Kanidm(object):
     def check_token(self) -> bool:
         if self.args.kanidm.token is None:
             raise KanidmArgsException("No token specified")
-        self.session.headers["Authorization"] = f"Bearer {self.args.kanidm.token}"
+        self.set_headers()
         self.session.cookies.clear_expired_cookies()
         self._response = self.session.get(f"{self.args.kanidm.uri}/v1/auth/valid")
         if self._response.status_code == 200:
             self.token = self.args.kanidm.token
             return True
-        self.session.headers.pop("Authorization")
         return False
 
     def login(self) -> bool:
         if self.args.kanidm.username is None or self.args.kanidm.password is None:
             raise KanidmArgsException("No username or password specified")
-        self.session.headers.pop("Authorization")
+        self.set_headers(False)
         self.session.cookies.clear_expired_cookies()
 
         self.response = self.session.post(
@@ -226,7 +229,6 @@ class Kanidm(object):
             return False
 
         self.token = self.json["state"]["success"]
-        self.session.headers["Authorization"] = f"Bearer {self.token}"
         return True
 
     def create_basic_client(self) -> bool:
@@ -235,6 +237,7 @@ class Kanidm(object):
         if self.args.url is None:
             raise KanidmRequiredOptionError("No url specified")
 
+        self.set_headers()
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/oauth2/_basic",
             json={
@@ -253,6 +256,7 @@ class Kanidm(object):
         if self.args.name is None:
             raise KanidmRequiredOptionError("No name specified")
 
+        self.set_headers()
         self.response = self.session.get(
             f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}"
         )
@@ -269,6 +273,7 @@ class Kanidm(object):
         if self.args.url is None:
             raise KanidmRequiredOptionError("No url specified")
 
+        self.set_headers()
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/oauth2/_public",
             json={
@@ -291,6 +296,7 @@ class Kanidm(object):
         if not self.args.scopes:
             raise KanidmRequiredOptionError("No scopes specified")
 
+        self.set_headers()
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_scopemap/{self.args.group}",
             json=self.args.scopes,
@@ -305,6 +311,7 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No name specified")
 
         if index is not None:
+            self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_sup_scopemap/{self.args.sup_scopes[index].group}",
                 json=self.args.sup_scopes[index].scopes,
@@ -312,6 +319,7 @@ class Kanidm(object):
 
         else:
             for sup_scope in self.args.sup_scopes:
+                self.set_headers()
                 self.response = self.session.post(
                     f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_sup_scopemap/{sup_scope.group}",
                     json=sup_scope.scopes,
@@ -328,13 +336,18 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No name specified")
 
         self.args.image.get()
+        self.session.headers.clear()
+        self.session.headers["User-Agent"] = "Ansible-Kanidm"
+        self.session.headers["Content-Type"] = "application/octet-stream"
+        self.session.headers["Cache-Control"] = "no-cache"
+        self.session.headers["Accept"] = "*/*"
+        self.session.headers["Accept-Encoding"] = "gzip, deflate, br"
+        self.session.headers["Connection"] = "keep-alive"
         with open(self.args.image.src, "rb") as f:
-            self.session.headers["Content-Type"] = "application/octet-stream"
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_image",
                 files={f"{self.args.name}.{self.args.image.format.value}": f},
             )
-            self.session.headers["Content-Type"] = "application/json"
 
         return self.verify_response()
 
@@ -342,6 +355,7 @@ class Kanidm(object):
         if self.args.name is None:
             raise KanidmRequiredOptionError("No name specified")
 
+        self.set_headers()
         self.response = self.session.patch(
             f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}",
             json={
@@ -414,6 +428,7 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No group specified")
 
         for c in self.args.custom_claims:
+            self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/_claimmap/{self.args.name}/{self.args.group}",
                 json=c.values,
@@ -431,6 +446,7 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No claims specified")
 
         for c in self.args.custom_claims:
+            self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_claimmap/{self.args.claim_join}",
                 json=c.values,
@@ -447,6 +463,7 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No redirect URL specified")
 
         for url in self.args.redirect_url:
+            self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_attr/oauth2_rs_origin",
                 json=[url],
