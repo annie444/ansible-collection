@@ -16,6 +16,13 @@ from ansible.module_utils.common.validation import (
     check_type_dict,
 )
 
+from .kanidm import (
+    KanidmException,
+    KanidmModuleError,
+    KanidmRequiredOptionError,
+    KanidmArgsException,
+)
+
 
 def decode_file(content: bytes, header: list[bytes]) -> str:
     if header[0:2] == [b"\x1f", b"\x8b"]:
@@ -57,7 +64,7 @@ def decode_file(content: bytes, header: list[bytes]) -> str:
         path = f"{temp_path}/{members[0]}"
         return str(path)
     elif header[0:4] == [b"\x50", b"\x4b", b"\x05", b"\x06"]:
-        raise ValueError("Path is an empty zip file")
+        raise KanidmModuleError("Path is an empty zip file")
     elif header[0:3] == [b"\xef", b"\xbb", b"\xbf"]:
         _, path = tempfile.mkstemp()
         with open(path, "wb") as f:
@@ -126,7 +133,7 @@ def decode_file(content: bytes, header: list[bytes]) -> str:
             f.write(zlib.decompress(content))
         return str(path)
     else:
-        raise ValueError("Unable to decode file")
+        raise KanidmModuleError("Unable to decode file")
 
 
 class Verify:
@@ -139,7 +146,7 @@ class Verify:
             return None
         self.value = check_type_str(self.value)
         if not isinstance(self.value, str):
-            raise TypeError(f"{self.name} must be a string")
+            raise KanidmArgsException(f"{self.name} must be a string")
         else:
             return self.value
 
@@ -160,7 +167,7 @@ class Verify:
             return None
         self.value = check_type_int(self.value)
         if not isinstance(self.value, int):
-            raise TypeError(f"{self.name} must be an integer")
+            raise KanidmArgsException(f"{self.name} must be an integer")
         else:
             return self.value
 
@@ -175,7 +182,7 @@ class Verify:
             return None
         self.value = check_type_bool(self.value)
         if not isinstance(self.value, bool):
-            raise TypeError(f"{self.name} must be a boolean")
+            raise KanidmArgsException(f"{self.name} must be a boolean")
         else:
             return self.value
 
@@ -195,7 +202,7 @@ class Verify:
             or isinstance(self.value, tuple)
             or isinstance(self.value, set)
         ):
-            raise TypeError(f"{self.name} must be a list")
+            raise KanidmArgsException(f"{self.name} must be a list")
         else:
             return list(self.value)
 
@@ -260,47 +267,47 @@ class Verify:
             return None
         self.value = check_type_dict(self.value)
         if not isinstance(self.value, dict):
-            raise TypeError(f"{self.name} must be a dict")
+            raise KanidmArgsException(f"{self.name} must be a dict")
         else:
             return self.value
 
     def verify_str(self) -> str:
         if self.value is None:
-            raise ValueError(f"{self.name} must not be None")
+            raise KanidmRequiredOptionError(f"{self.name} must not be None")
         self.value = check_type_str(self.value)
         if not isinstance(self.value, str):
-            raise TypeError(f"{self.name} must be a string")
+            raise KanidmArgsException(f"{self.name} must be a string")
         else:
             return self.value
 
     def verify_int(self) -> int:
         if self.value is None:
-            raise ValueError(f"{self.name} must not be None")
+            raise KanidmRequiredOptionError(f"{self.name} must not be None")
         self.value = check_type_int(self.value)
         if not isinstance(self.value, int):
-            raise TypeError(f"{self.name} must be an integer")
+            raise KanidmArgsException(f"{self.name} must be an integer")
         else:
             return self.value
 
     def verify_bool(self) -> bool:
         if self.value is None:
-            raise ValueError(f"{self.name} must not be None")
+            raise KanidmRequiredOptionError(f"{self.name} must not be None")
         self.value = check_type_bool(self.value)
         if not isinstance(self.value, bool):
-            raise TypeError(f"{self.name} must be a boolean")
+            raise KanidmArgsException(f"{self.name} must be a boolean")
         else:
             return self.value
 
     def verify_list(self) -> list:
         if self.value is None:
-            raise ValueError(f"{self.name} must not be None")
+            raise KanidmRequiredOptionError(f"{self.name} must not be None")
         self.value = check_type_list(self.value)
         if not (
             isinstance(self.value, list)
             or isinstance(self.value, tuple)
             or isinstance(self.value, set)
         ):
-            raise TypeError(f"{self.name} must be a list")
+            raise KanidmArgsException(f"{self.name} must be a list")
         else:
             return list(self.value)
 
@@ -330,10 +337,10 @@ class Verify:
 
     def verify_dict(self) -> dict:
         if self.value is None:
-            raise ValueError(f"{self.name} must not be None")
+            raise KanidmRequiredOptionError(f"{self.name} must not be None")
         self.value = check_type_dict(self.value)
         if not isinstance(self.value, dict):
-            raise TypeError(f"{self.name} must be a dict")
+            raise KanidmArgsException(f"{self.name} must be a dict")
         else:
             return self.value
 
@@ -342,9 +349,12 @@ class Verify:
             return None
         self.value = check_type_str(self.value)
         if not isinstance(self.value, str):
-            raise TypeError(f"{self.name} should be a base64 encoded string")
+            raise KanidmArgsException(f"{self.name} should be a base64 encoded string")
 
-        content = b64decode(self.value)
+        try:
+            content = b64decode(self.value)
+        except Exception as e:
+            KanidmException(f"Base64 decoding error: {e}")
         header = []
         for i in range(0, 6):
             header.append(bytes([list(content)[i]]))
@@ -352,11 +362,15 @@ class Verify:
 
     def verify_content(self) -> str:
         if self.value is None:
-            raise ValueError(f"{self.name} must be defined")
+            raise KanidmRequiredOptionError(f"{self.name} must be defined")
         self.value = check_type_str(self.value)
         if not isinstance(self.value, str):
-            raise TypeError(f"{self.name} should be a base64 encoded string")
-        content = b64decode(self.value)
+            raise KanidmArgsException(f"{self.name} should be a base64 encoded string")
+        try:
+            content = b64decode(self.value)
+        except Exception as e:
+            raise KanidmException(f"Base64 decoding error: {e}")
+
         header = []
         for i in range(0, 6):
             header.append(bytes([list(content)[i]]))

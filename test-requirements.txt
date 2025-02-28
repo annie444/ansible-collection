@@ -2,4 +2,4 @@
 pytest-ansible
 pytest-xdist
 molecule
-pykanidm
+requests>=2.32

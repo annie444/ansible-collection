@@ -1,2 +1,2 @@
 # TO-DO: add python packages that are required for this collection
-pykanidm
+requests>=2.32
