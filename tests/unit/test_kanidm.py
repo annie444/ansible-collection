@@ -57,6 +57,7 @@ class TestKanidmModule(unittest.TestCase):
             kanidm.main()
 
     def test_kanidm_auth_succeeds(self):
+        raised = None
         with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
@@ -81,6 +82,7 @@ class TestKanidmModule(unittest.TestCase):
         self.assertEqual(raised.data["message"].lower(), "success")
 
     def test_kanidm_creates_client_if_not_exists(self):
+        raised = None
         with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
@@ -105,6 +107,7 @@ class TestKanidmModule(unittest.TestCase):
         self.assertEqual(raised.data["message"].lower(), "success")
 
     def test_kanidm_updates_client_if_exists(self):
+        raised = None
         with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
@@ -158,6 +161,7 @@ class TestKanidmModule(unittest.TestCase):
         self.assertEqual(raised.data["message"].lower(), "success")
 
     def test_kanidm_creates_client_with_different_group(self):
+        raised = None
         with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
