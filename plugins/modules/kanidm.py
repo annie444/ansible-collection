@@ -6,7 +6,9 @@ from __future__ import absolute_import, annotations, division, print_function
 
 __metaclass__ = type  # pylint: disable=C0103
 
-from ansible_collections.annie444.base.plugins.module_utils.arg_specs import KanidmArgs
+from ..module_utils.kanidm.arg_specs import (
+    KanidmArgs,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -61,8 +63,10 @@ message:
 """
 
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
-from ansible_collections.annie444.base.plugins.module_utils.kanidm_runner import (  # pylint: disable=E0401  # noqa: E402
+from ..module_utils.kanidm.runner import (  # pylint: disable=E0401  # noqa: E402
     Kanidm,
+)
+from ..module_utils.kanidm.exceptions import (  # pylint: disable=E0401  # noqa: E402
     KanidmArgsException,
     KanidmAuthenticationFailure,
     KanidmException,

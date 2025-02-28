@@ -1,37 +1,16 @@
 from typing import Optional, Any, Dict
 from requests import Response
-from ansible_collections.annie444.base.plugins.module_utils.arg_specs import (
+from .arg_specs import (
     KanidmArgs,
     PrefUsername,
 )
-from ansible.errors import (
-    AnsibleError,
-    AnsibleOptionsError,
-    AnsibleModuleError,
-    AnsibleAuthenticationFailure,
-    AnsibleRequiredOptionError,
+from .exceptions import (
+    KanidmAuthenticationFailure,
+    KanidmException,
+    KanidmRequiredOptionError,
+    KanidmArgsException,
 )
 from requests.sessions import Session
-
-
-class KanidmException(AnsibleError):
-    pass
-
-
-class KanidmArgsException(AnsibleOptionsError):
-    pass
-
-
-class KanidmRequiredOptionError(AnsibleRequiredOptionError):
-    pass
-
-
-class KanidmModuleError(AnsibleModuleError):
-    pass
-
-
-class KanidmAuthenticationFailure(AnsibleAuthenticationFailure):
-    pass
 
 
 class Kanidm(object):

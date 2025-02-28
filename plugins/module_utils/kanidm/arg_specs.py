@@ -5,12 +5,13 @@ import yaml
 import tempfile
 import requests
 
-from ansible_collections.annie444.base.plugins.module_utils.ansible_specs import (
+from ..ansible_specs import (
     AnsibleArgumentSpec,
     OptionType,
 )
-from ansible_collections.annie444.base.plugins.module_utils.verify import Verify
-from ansible_collections.annie444.base.plugins.module_utils.kanidm_runner import (
+from ..verify import Verify
+from .exceptions import (
+    KanidmArgsException,
     KanidmException,
     KanidmModuleError,
     KanidmRequiredOptionError,
@@ -78,30 +79,39 @@ class KanidmConf:
     connect_timeout: int = 30
 
     def __init__(self, **kwargs):
-        if "uri" in kwargs:
-            self.uri = Verify(kwargs.get("uri"), "uri").verify_str()
-        else:
-            raise KanidmRequiredOptionError("kanidm uri is required")
-        if "token" in kwargs:
-            self.token = Verify(kwargs.get("token"), "token").verify_opt_str()
-        if "ca_path" in kwargs:
-            self.ca_path = Verify(kwargs.get("ca_path"), "ca_path").verify_opt_str()
-        if "username" in kwargs:
-            self.username = Verify(kwargs.get("username"), "username").verify_opt_str()
-        if "password" in kwargs:
-            self.password = kwargs.get("password")
-        if "ca_cert_data" in kwargs:
-            self.ca_path = Verify(
-                kwargs.get("ca_cert_data"), "ca_cert_data"
-            ).verify_opt_content()
-        if "verify_ca" in kwargs:
-            self.verify_ca = Verify(
-                kwargs.get("verify_ca"), "verify_ca"
-            ).verify_opt_str()
-        if "connect_timeout" in kwargs:
-            self.connect_timeout = Verify(
-                kwargs.get("connect_timeout"), "connect_timeout"
-            ).verify_default_int(30)
+        try:
+            if "uri" in kwargs:
+                self.uri = Verify(kwargs.get("uri"), "uri").verify_str()
+            else:
+                raise KanidmRequiredOptionError("kanidm uri is required")
+            if "token" in kwargs:
+                self.token = Verify(kwargs.get("token"), "token").verify_opt_str()
+            if "ca_path" in kwargs:
+                self.ca_path = Verify(kwargs.get("ca_path"), "ca_path").verify_opt_str()
+            if "username" in kwargs:
+                self.username = Verify(
+                    kwargs.get("username"), "username"
+                ).verify_opt_str()
+            if "password" in kwargs:
+                self.password = kwargs.get("password")
+            if "ca_cert_data" in kwargs:
+                self.ca_path = Verify(
+                    kwargs.get("ca_cert_data"), "ca_cert_data"
+                ).verify_opt_content()
+            if "verify_ca" in kwargs:
+                self.verify_ca = Verify(
+                    kwargs.get("verify_ca"), "verify_ca"
+                ).verify_opt_str()
+            if "connect_timeout" in kwargs:
+                self.connect_timeout = Verify(
+                    kwargs.get("connect_timeout"), "connect_timeout"
+                ).verify_default_int(30)
+        except TypeError as e:
+            raise KanidmArgsException(str(e), e)
+        except ValueError as e:
+            raise KanidmArgsException(str(e), e)
+        except AttributeError as e:
+            raise KanidmRequiredOptionError(str(e), e)
 
     @staticmethod
     def valid_args() -> FrozenSet[str]:
@@ -188,19 +198,30 @@ class SupScope:
     scopes: List[Scope]
 
     def __init__(self, **kwargs):
-        if "group" in kwargs:
-            self.group = Verify(kwargs.get("group"), "sup_scopesp[].group").verify_str()
-        else:
-            raise KanidmRequiredOptionError("sup_scopesp[].group not defined")
-        if "scopes" in kwargs:
-            self.scopes = [
-                Scope(s)
-                for s in Verify(
-                    kwargs.get("scopes"), "sup_scopesp[].scopes"
-                ).verify_list_str()
-            ]
-        else:
-            raise KanidmRequiredOptionError("sup_scopesp[].scopes not defined")
+        try:
+            if "group" in kwargs:
+                self.group = Verify(
+                    kwargs.get("group"), "sup_scopesp[].group"
+                ).verify_str()
+            else:
+                raise KanidmRequiredOptionError("sup_scopesp[].group not defined")
+            if "scopes" in kwargs:
+                self.scopes = [
+                    Scope(s)
+                    for s in Verify(
+                        kwargs.get("scopes"), "sup_scopesp[].scopes"
+                    ).verify_list_str()
+                ]
+            else:
+                raise KanidmRequiredOptionError("sup_scopesp[].scopes not defined")
+        except TypeError as e:
+            raise KanidmArgsException(str(e), e)
+        except ValueError as e:
+            raise KanidmArgsException(str(e), e)
+        except AttributeError as e:
+            raise KanidmRequiredOptionError(str(e), e)
+        except Exception as e:
+            raise e
 
     @staticmethod
     def valid_args() -> FrozenSet[str]:
@@ -242,22 +263,33 @@ class CustomClaim:
     values: List[str]
 
     def __init__(self, **kwargs):
-        if "name" in kwargs:
-            self.name = Verify(kwargs.get("name"), "custom_claims[].name").verify_str()
-        else:
-            raise KanidmRequiredOptionError("custom_claims[].name not defined")
-        if "group" in kwargs:
-            self.group = Verify(
-                kwargs.get("group"), "custom_claims[].group"
-            ).verify_str()
-        else:
-            raise KanidmRequiredOptionError("custom_claims[].group not defined")
-        if "values" in kwargs:
-            self.values = Verify(
-                kwargs.get("values"), "custom_claims[].values"
-            ).verify_list_str()
-        else:
-            raise KanidmRequiredOptionError("custom_claims[].values not defined")
+        try:
+            if "name" in kwargs:
+                self.name = Verify(
+                    kwargs.get("name"), "custom_claims[].name"
+                ).verify_str()
+            else:
+                raise KanidmRequiredOptionError("custom_claims[].name not defined")
+            if "group" in kwargs:
+                self.group = Verify(
+                    kwargs.get("group"), "custom_claims[].group"
+                ).verify_str()
+            else:
+                raise KanidmRequiredOptionError("custom_claims[].group not defined")
+            if "values" in kwargs:
+                self.values = Verify(
+                    kwargs.get("values"), "custom_claims[].values"
+                ).verify_list_str()
+            else:
+                raise KanidmRequiredOptionError("custom_claims[].values not defined")
+        except TypeError as e:
+            raise KanidmArgsException(str(e), e)
+        except ValueError as e:
+            raise KanidmArgsException(str(e), e)
+        except AttributeError as e:
+            raise KanidmRequiredOptionError(str(e), e)
+        except Exception as e:
+            raise e
 
     @staticmethod
     def valid_args() -> FrozenSet[str]:
@@ -303,16 +335,25 @@ class Image:
     format: ImageFormat = ImageFormat.auto
 
     def __init__(self, **kwargs):
-        if "src" in kwargs:
-            self.src = Verify(kwargs.get("src"), "image.src").verify_str()
-        else:
-            raise KanidmRequiredOptionError("image.src is not defined")
-        if "format" in kwargs:
-            self.format = ImageFormat(
-                Verify(kwargs.get("format"), "image.format").verify_str()
-            )
-        else:
-            raise KanidmRequiredOptionError("image.format is not defined")
+        try:
+            if "src" in kwargs:
+                self.src = Verify(kwargs.get("src"), "image.src").verify_str()
+            else:
+                raise KanidmRequiredOptionError("image.src is not defined")
+            if "format" in kwargs:
+                self.format = ImageFormat(
+                    Verify(kwargs.get("format"), "image.format").verify_str()
+                )
+            else:
+                raise KanidmRequiredOptionError("image.format is not defined")
+        except TypeError as e:
+            raise KanidmArgsException(str(e), e)
+        except ValueError as e:
+            raise KanidmArgsException(str(e), e)
+        except AttributeError as e:
+            raise KanidmRequiredOptionError(str(e), e)
+        except Exception as e:
+            raise e
 
     @staticmethod
     def valid_args() -> FrozenSet[str]:
@@ -499,90 +540,99 @@ class KanidmArgs:
         self.image = None
 
         # Set args
-        if "name" in kwargs:
-            self.name = Verify(kwargs.get("name"), "name").verify_str()
-        else:
-            raise KanidmRequiredOptionError("name is required")
-        if "url" in kwargs:
-            self.url = Verify(kwargs.get("url"), "url").verify_str()
-        else:
-            raise KanidmRequiredOptionError("url is required")
-        if "redirect_url" in kwargs:
-            self.redirect_url = Verify(
-                kwargs.get("redirect_url"), "redirect_url"
-            ).verify_list_str()
-        else:
-            raise KanidmRequiredOptionError("redirect_url is required")
-        if "scopes" in kwargs:
-            self.scopes = [
-                Scope(s)
-                for s in Verify(kwargs.get("scopes"), "scopes").verify_list_str()
-            ]
-        else:
-            raise KanidmRequiredOptionError("scopes is required")
-        if "kanidm" in kwargs:
-            self.kanidm = KanidmConf(
-                **Verify(kwargs.get("kanidm"), "kanidm").verify_dict()
-            )
-        else:
-            raise KanidmRequiredOptionError("kanidm is required")
-        if "display_name" in kwargs:
-            self.display_name = Verify(
-                kwargs.get("display_name", self.name), "display_name"
-            ).verify_str()
-        if "group" in kwargs:
-            self.group = Verify(kwargs.get("group"), "group").verify_default_str(
-                "idm_all_persons"
-            )
-        if "public" in kwargs:
-            self.public = Verify(kwargs.get("public"), "public").verify_default_bool(
-                False
-            )
-        if "claim_join" in kwargs:
-            self.claim_join = ClaimJoin(
-                Verify(kwargs.get("claim_join"), "claim_join").verify_default_str(
-                    ClaimJoin.array
-                )
-            )
-        if "pkce" in kwargs:
-            self.pkce = Verify(kwargs.get("pkce"), "pkce").verify_default_bool(True)
-        if "legacy_crypto" in kwargs:
-            self.legacy_crypto = Verify(
-                kwargs.get("legacy_crypto"), "legacy_crypto"
-            ).verify_default_bool(False)
-        if "strict_redirect" in kwargs:
-            self.strict_redirect = Verify(
-                kwargs.get("strict_redirect"), "strict_redirect"
-            ).verify_default_bool(True)
-        if "local_redirect" in kwargs:
-            self.local_redirect = Verify(
-                kwargs.get("local_redirect"), "local_redirect"
-            ).verify_default_bool(False)
-        if "username" in kwargs:
-            username = Verify(kwargs.get("username"), "username").verify_default_str(
-                PrefUsername.spn
-            )
-            self.username = PrefUsername(username)
-        if "sup_scopes" in kwargs:
-            sup_scopes: list[dict] | None = Verify(
-                kwargs.get("sup_scopes"), "sup_scopes"
-            ).verify_opt_list_dict()
-            self.sup_scopes = (
-                [SupScope(**scope) for scope in sup_scopes]
-                if sup_scopes is not None
-                else None
-            )
-        if "custom_claims" in kwargs:
-            cc = Verify(
-                kwargs.get("custom_claims"), "custom_claims"
-            ).verify_opt_list_dict()
-            if cc is None:
-                self.custom_claims = None
+        try:
+            if "name" in kwargs:
+                self.name = Verify(kwargs.get("name"), "name").verify_str()
             else:
-                self.custom_claims = [CustomClaim(**claim) for claim in cc]
-        if "image" in kwargs:
-            img = Verify(kwargs.get("image"), "image").verify_opt_dict()
-            self.image = Image(**img) if img is not None else None
+                raise KanidmRequiredOptionError("name is required")
+            if "url" in kwargs:
+                self.url = Verify(kwargs.get("url"), "url").verify_str()
+            else:
+                raise KanidmRequiredOptionError("url is required")
+            if "redirect_url" in kwargs:
+                self.redirect_url = Verify(
+                    kwargs.get("redirect_url"), "redirect_url"
+                ).verify_list_str()
+            else:
+                raise KanidmRequiredOptionError("redirect_url is required")
+            if "scopes" in kwargs:
+                self.scopes = [
+                    Scope(s)
+                    for s in Verify(kwargs.get("scopes"), "scopes").verify_list_str()
+                ]
+            else:
+                raise KanidmRequiredOptionError("scopes is required")
+            if "kanidm" in kwargs:
+                self.kanidm = KanidmConf(
+                    **Verify(kwargs.get("kanidm"), "kanidm").verify_dict()
+                )
+            else:
+                raise KanidmRequiredOptionError("kanidm is required")
+            if "display_name" in kwargs:
+                self.display_name = Verify(
+                    kwargs.get("display_name", self.name), "display_name"
+                ).verify_str()
+            if "group" in kwargs:
+                self.group = Verify(kwargs.get("group"), "group").verify_default_str(
+                    "idm_all_persons"
+                )
+            if "public" in kwargs:
+                self.public = Verify(
+                    kwargs.get("public"), "public"
+                ).verify_default_bool(False)
+            if "claim_join" in kwargs:
+                self.claim_join = ClaimJoin(
+                    Verify(kwargs.get("claim_join"), "claim_join").verify_default_str(
+                        ClaimJoin.array
+                    )
+                )
+            if "pkce" in kwargs:
+                self.pkce = Verify(kwargs.get("pkce"), "pkce").verify_default_bool(True)
+            if "legacy_crypto" in kwargs:
+                self.legacy_crypto = Verify(
+                    kwargs.get("legacy_crypto"), "legacy_crypto"
+                ).verify_default_bool(False)
+            if "strict_redirect" in kwargs:
+                self.strict_redirect = Verify(
+                    kwargs.get("strict_redirect"), "strict_redirect"
+                ).verify_default_bool(True)
+            if "local_redirect" in kwargs:
+                self.local_redirect = Verify(
+                    kwargs.get("local_redirect"), "local_redirect"
+                ).verify_default_bool(False)
+            if "username" in kwargs:
+                username = Verify(
+                    kwargs.get("username"), "username"
+                ).verify_default_str(PrefUsername.spn)
+                self.username = PrefUsername(username)
+            if "sup_scopes" in kwargs:
+                sup_scopes: list[dict] | None = Verify(
+                    kwargs.get("sup_scopes"), "sup_scopes"
+                ).verify_opt_list_dict()
+                self.sup_scopes = (
+                    [SupScope(**scope) for scope in sup_scopes]
+                    if sup_scopes is not None
+                    else None
+                )
+            if "custom_claims" in kwargs:
+                cc = Verify(
+                    kwargs.get("custom_claims"), "custom_claims"
+                ).verify_opt_list_dict()
+                if cc is None:
+                    self.custom_claims = None
+                else:
+                    self.custom_claims = [CustomClaim(**claim) for claim in cc]
+            if "image" in kwargs:
+                img = Verify(kwargs.get("image"), "image").verify_opt_dict()
+                self.image = Image(**img) if img is not None else None
+        except TypeError as e:
+            raise KanidmArgsException(str(e), e)
+        except ValueError as e:
+            raise KanidmArgsException(str(e), e)
+        except AttributeError as e:
+            raise KanidmRequiredOptionError(str(e), e)
+        except Exception as e:
+            raise e
 
     @staticmethod
     def valid_args() -> FrozenSet[str]:
