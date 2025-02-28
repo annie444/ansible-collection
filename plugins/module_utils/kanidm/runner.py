@@ -153,8 +153,10 @@ class Kanidm(object):
             )
 
     def check_token(self) -> bool:
-        if self.args.kanidm.token is None:
+        if self.args.kanidm.token is None and self.token is None:
             raise KanidmArgsException("No token specified")
+        if self.args.kanidm.token is not None and self.token is None:
+            self.token = self.args.kanidm.token
         self.set_headers()
         self.session.cookies.clear_expired_cookies()
         self.response = self.session.get(
