@@ -1,5 +1,9 @@
 import json
 import unittest
+import os
+from pathlib import Path
+import sys
+from datetime import datetime
 
 from ansible_collections.annie444.base.plugins.modules import kanidm_create_oauth
 
@@ -31,13 +35,72 @@ class AnsibleFailJson(Exception):
 def exit_json(*args, **kwargs):
     """function to patch over exit_json; package return data into an exception"""
     if "changed" not in kwargs:
-        kwargs["changed"] = False
+        raise ValueError("changed is a required key in exit_json")
+    if os.environ.get("ANSIBLE_VERBOSITY", "0").isnumeric():
+        verbosity = int(os.environ.get("ANSIBLE_VERBOSITY", "0"))
+        if verbosity >= 1:
+            if verbosity >= 3 and "requests" in kwargs and "responses" in kwargs:
+                paired_calls = {}
+                for req, data in kwargs["requests"].items():
+                    name = ""
+                    for i in req:
+                        if i.isalnum():
+                            name += i
+                    paired_calls[req] = {
+                        "request": data,
+                        "response": kwargs["responses"][req] or {},
+                    }
+                kwargs["paired_calls"] = paired_calls
+
+            log_dir = os.environ.get("LOG_DIR")
+            if log_dir is not None and isinstance(log_dir, str):
+                dir = Path(log_dir)
+                if not dir.exists():
+                    os.makedirs(dir)
+                with open(
+                    dir
+                    / f"{datetime.now().isoformat(timespec='microseconds')}_test_kanidm_create_oauth.json",
+                    "w",
+                ) as f:
+                    f.write(json.dumps(kwargs, indent=4))
+            else:
+                sys.stderr.write(json.dumps(kwargs, indent=4))
+
     raise AnsibleExitJson(kwargs)
 
 
 def fail_json(*args, **kwargs):
     """function to patch over fail_json; package return data into an exception"""
     kwargs["failed"] = True
+    if os.environ.get("ANSIBLE_VERBOSITY", "0").isnumeric():
+        verbosity = int(os.environ.get("ANSIBLE_VERBOSITY", "0"))
+        if verbosity >= 1:
+            if verbosity >= 3 and "requests" in kwargs and "responses" in kwargs:
+                paired_calls = {}
+                for req, data in kwargs["requests"].items():
+                    name = ""
+                    for i in req:
+                        if i.isalnum():
+                            name += i
+                    paired_calls[req] = {
+                        "request": data,
+                        "response": kwargs["responses"][req] or {},
+                    }
+                kwargs["paired_calls"] = paired_calls
+
+            log_dir = os.environ.get("LOG_DIR")
+            if log_dir is not None and isinstance(log_dir, str):
+                dir = Path(log_dir)
+                if not dir.exists():
+                    os.makedirs(dir)
+                with open(
+                    dir
+                    / f"{datetime.now().isoformat(timespec='microseconds')}_test_kanidm_create_oauth.json",
+                    "w",
+                ) as f:
+                    f.write(json.dumps(kwargs, indent=4))
+            else:
+                sys.stderr.write(json.dumps(kwargs, indent=4))
     raise AnsibleFailJson(kwargs)
 
 

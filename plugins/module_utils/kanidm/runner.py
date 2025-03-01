@@ -163,12 +163,17 @@ class Kanidm(object):
 
     def create_oauth_client(self):
         self.authenticate()
+
         if not self.check_token():
             raise KanidmAuthenticationFailure(
                 "Unable to establish an authenticated connection with the kanidm server"
             )
 
         if not self.get_client():
+            with open(
+                "/Users/annieehler/Projects/JVP/failed/creating_client", "w"
+            ) as f:
+                f.write(json.dumps(self.responses))
             if not self.args.public:
                 if not self.create_basic_client():
                     raise KanidmException(
@@ -256,7 +261,7 @@ class Kanidm(object):
         return self.text
 
     def verify_response(self) -> bool:
-        if self.response.status_code < 200 and self.response.status_code >= 300:
+        if self.response.status_code < 200 or self.response.status_code >= 300:
             return False
 
         try:
@@ -264,6 +269,8 @@ class Kanidm(object):
         except Exception:
             self.json = {}
         self.text = self.response.text
+        if "nomatchingentries" in self.text:
+            return False
         return True
 
     def get(self, name: str, path: str) -> bool:
@@ -446,6 +453,7 @@ class Kanidm(object):
 
         if self.response.text is None or self.response.text == "":
             return False
+
         return True
 
     def create_public_client(self) -> bool:
@@ -662,10 +670,9 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No redirect URL specified")
 
         for url in self.args.redirect_url:
-            if not self.post(
+            if not self.patch_oauth(
                 name=f"add_redirect_url[{url}]",
-                path=f"/v1/oauth2/{self.args.name}/_attr/oauth2_rs_origin",
-                json=[url],
+                attrs={"oauth2_rs_origin": [url]},
             ):
                 return False
         return True
