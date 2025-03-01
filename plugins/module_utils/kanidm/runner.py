@@ -176,10 +176,20 @@ class Kanidm(object):
             )
 
     def check_token(self) -> bool:
-        if self.args.kanidm.token is None and self.token is None:
+        if (
+            self.args.kanidm.token is None
+            and not isinstance(self.session.auth, BearerAuth)
+            and (
+                isinstance(self.session.auth, BearerAuth)
+                and self.session.auth.token is None
+            )
+        ):
             raise KanidmArgsException("No token specified")
-        if self.args.kanidm.token is not None and self.token is None:
-            self.token = self.args.kanidm.token
+        if self.args.kanidm.token is not None and (
+            not isinstance(self.session.auth, BearerAuth)
+            or self.session.auth.token is None
+        ):
+            self.session.auth = BearerAuth(self.args.kanidm.token)
         self.set_headers()
         self.session.cookies.clear_expired_cookies()
         self.response = self.session.get(f"{self.args.kanidm.uri}/v1/auth/valid")
