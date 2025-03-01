@@ -389,14 +389,11 @@ class Kanidm(object):
         self.session.headers["Accept-Encoding"] = "gzip, deflate, br"
         self.session.headers["Connection"] = "keep-alive"
 
-        with open(self.args.image.src, "rb") as f:
-            contents = f.read()
-
         m = MultipartEncoder(
             {
                 "image": (
                     f"{self.args.name}.{self.args.image.format.value}",
-                    contents,
+                    open(self.args.image.src, "rb"),
                     self.args.image.format.mime(),
                 )
             }
