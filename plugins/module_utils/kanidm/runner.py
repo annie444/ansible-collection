@@ -393,6 +393,7 @@ class Kanidm(object):
         self.session.headers["Accept"] = "*/*"
         self.session.headers["Accept-Encoding"] = "gzip, deflate, br"
         self.session.headers["Connection"] = "keep-alive"
+        self.session.headers["Authorization"] = f"Bearer {self.token}"
 
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_image",
