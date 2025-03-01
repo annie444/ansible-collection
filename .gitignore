@@ -6,7 +6,7 @@ __pycache__/
 .ansible/
 
 failed.json
-failed/
+/failed
 
 # C extensions
 *.so
