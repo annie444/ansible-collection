@@ -388,8 +388,9 @@ class Kanidm(object):
                 verify=self.verify,
                 files={f"{self.args.name}.{self.args.image.format.value}": f},
             )
-
-        return self.verify_response()
+        if self.response.status_code < 200 or self.response.status_code >= 300:
+            return False
+        return True
 
     def patch_oauth(self, attrs: Dict[str, List[str]]) -> bool:
         if self.args.name is None:
