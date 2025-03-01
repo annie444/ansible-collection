@@ -3,3 +3,4 @@ pytest-ansible
 pytest-xdist
 molecule
 requests>=2.32
+requests-toolbelt>=1

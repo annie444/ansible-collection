@@ -11,6 +11,7 @@ from .exceptions import (
     KanidmArgsException,
 )
 from requests.sessions import Session
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 
 class Kanidm(object):
@@ -375,19 +376,30 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No name specified")
 
         self.args.image.get()
+        m = MultipartEncoder(
+            fields={
+                "image": (
+                    f"{self.args.name}.{self.args.image.format.value}",
+                    open(self.args.image.src, "rb"),
+                    self.args.image.format.mime(),
+                )
+            }
+        )
+
         self.session.headers.clear()
         self.session.headers["User-Agent"] = "Ansible-Kanidm"
-        self.session.headers["Content-Type"] = "application/octet-stream"
+        self.session.headers["Content-Type"] = m.content_type
         self.session.headers["Cache-Control"] = "no-cache"
         self.session.headers["Accept"] = "*/*"
         self.session.headers["Accept-Encoding"] = "gzip, deflate, br"
         self.session.headers["Connection"] = "keep-alive"
-        with open(self.args.image.src, "rb") as f:
-            self.response = self.session.post(
-                f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_image",
-                verify=self.verify,
-                files={f"{self.args.name}.{self.args.image.format.value}": f},
-            )
+
+        self.response = self.session.post(
+            f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_image",
+            verify=self.verify,
+            data=m,
+        )
+
         if self.response.status_code < 200 or self.response.status_code >= 300:
             return False
         return True
