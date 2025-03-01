@@ -1,7 +1,7 @@
 from typing import Optional, Any, Dict, List
 from requests import Response
 from .arg_specs import (
-    KanidmArgs,
+    KanidmOauthArgs,
     PrefUsername,
 )
 from .exceptions import (
@@ -14,8 +14,8 @@ from requests.sessions import Session
 
 
 class Kanidm(object):
-    def __init__(self, args: KanidmArgs):
-        self.args: KanidmArgs = args
+    def __init__(self, args: KanidmOauthArgs):
+        self.args: KanidmOauthArgs = args
         self.session = Session()
         self.response: Response | None = None
         self.json: Dict | None = None

@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from ansible_collections.annie444.base.plugins.modules import kanidm
+from ansible_collections.annie444.base.plugins.modules import kanidm_create_oauth
 
 from unittest.mock import patch
 from ansible.module_utils import basic
@@ -41,7 +41,7 @@ def fail_json(*args, **kwargs):
     raise AnsibleFailJson(kwargs)
 
 
-class TestKanidmModule(unittest.TestCase):
+class TestKanidmOauthModule(unittest.TestCase):
     def setUp(self):
         self.mock_module_helper = patch.multiple(
             basic.AnsibleModule,
@@ -54,7 +54,7 @@ class TestKanidmModule(unittest.TestCase):
     def test_module_fail_when_required_args_missing(self):
         with self.assertRaises(AnsibleFailJson):
             set_module_args({})
-            kanidm.main()
+            kanidm_create_oauth.main()
 
     def test_kanidm_auth_succeeds(self):
         with self.assertRaises(AnsibleExitJson) as ej:
@@ -73,7 +73,7 @@ class TestKanidmModule(unittest.TestCase):
                     "scopes": ["openid", "profile", "email"],
                 }
             )
-            kanidm.main()
+            kanidm_create_oauth.main()
         raised = ej.exception
         self.assertEqual(raised.data["changed"], True)
         self.assertIsInstance(raised.data["secret"], str)
@@ -97,7 +97,7 @@ class TestKanidmModule(unittest.TestCase):
                     "scopes": ["openid", "profile", "email"],
                 }
             )
-            kanidm.main()
+            kanidm_create_oauth.main()
         raised = ej.exception
         self.assertEqual(raised.data["changed"], True)
         self.assertIsInstance(raised.data["secret"], str)
@@ -121,7 +121,7 @@ class TestKanidmModule(unittest.TestCase):
                     "scopes": ["openid", "profile", "email"],
                 }
             )
-            kanidm.main()
+            kanidm_create_oauth.main()
         raised = ej.exception
         self.assertEqual(raised.data["changed"], True)
         self.assertIsInstance(raised.data["secret"], str)
@@ -150,7 +150,7 @@ class TestKanidmModule(unittest.TestCase):
                     ],
                 }
             )
-            kanidm.main()
+            kanidm_create_oauth.main()
         raised = ej.exception
         self.assertEqual(raised.data["changed"], True)
         self.assertIsInstance(raised.data["secret"], str)
@@ -175,7 +175,45 @@ class TestKanidmModule(unittest.TestCase):
                     "scopes": ["openid", "profile", "email"],
                 }
             )
-            kanidm.main()
+            kanidm_create_oauth.main()
+        raised = ej.exception
+        self.assertEqual(raised.data["changed"], True)
+        self.assertIsInstance(raised.data["secret"], str)
+        self.assertTrue(len(raised.data["secret"]) > 0)
+        self.assertEqual(raised.data["message"].lower(), "success")
+
+    def test_kanidm_oauth_example(self):
+        with self.assertRaises(AnsibleExitJson) as ej:
+            set_module_args(
+                {
+                    "name": "nextcloud",
+                    "display_name": "Nextcloud Document Server",
+                    "url": "https://nextcloud.example.com",
+                    "redirect_url": [
+                        "https://nextcloud.example.com/apps/oauth2/authorize",
+                        "https://nextcloud.example.com/apps/oauth2/api/v1/token",
+                        "https://nextcloud.example.com/index.php/apps/oauth2/authorize",
+                        "https://nextcloud.example.com/index.php/apps/oauth2/api/v1/token",
+                    ],
+                    "scopes": [
+                        "openid",
+                        "profile",
+                        "email",
+                    ],
+                    "username": "short",
+                    "image": {
+                        "src": "https://nextcloud.com/c/uploads/2022/11/logo_nextcloud_blue.svg",
+                        "format": "svg",
+                    },
+                    "kanidm": {
+                        "uri": "https://localhost:8443",
+                        "username": "idm_admin",
+                        "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
+                        "verify_ca": False,
+                    },
+                }
+            )
+            kanidm_create_oauth.main()
         raised = ej.exception
         self.assertEqual(raised.data["changed"], True)
         self.assertIsInstance(raised.data["secret"], str)

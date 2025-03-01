@@ -521,7 +521,7 @@ class Image:
 
 
 @dataclass
-class KanidmArgs:
+class KanidmOauthArgs:
     name: str
     url: str
     redirect_url: List[str]
@@ -796,12 +796,12 @@ class KanidmArgs:
             },
         }
 
-    @staticmethod
-    def documentation(indentation: Optional[int] = None) -> str:
+    @classmethod
+    def documentation(cls, indentation: Optional[int] = None) -> str:
         if indentation is not None:
-            out: str = yaml.dump(KanidmArgs.arg_spec(), sort_keys=False)
+            out: str = yaml.dump(cls.arg_spec(), sort_keys=False)
             values = []
             for line in out.splitlines():
                 values.append(f"{' ' * indentation}{line}")
             return "\n".join(values)
-        return yaml.dump(KanidmArgs.arg_spec(), sort_keys=False)
+        return yaml.dump(cls.arg_spec(), sort_keys=False)

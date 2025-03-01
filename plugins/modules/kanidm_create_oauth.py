@@ -7,29 +7,27 @@ from __future__ import absolute_import, annotations, division, print_function
 __metaclass__ = type  # pylint: disable=C0103
 
 from ..module_utils.kanidm.arg_specs import (
-    KanidmArgs,
+    KanidmOauthArgs,
 )
 
 DOCUMENTATION = r"""
 ---
-module: kanidm
-
-short_description: A kanidm proof-of-concept module
-
+module: kanidm_create_oauth
+short_description: Create an OAuth client in kanidm.
 version_added: "1.0.0"
-
-description: This module creates an OAuth client in kanidm.
-
+description:
+  - This module creates or updates an OAuth client in Kanidm.
+  - This module requires the requests Python package.
 requirements:
-    - pykanidm>=1.0.0
+    - requests>=2.32
 author: Annie Ehler (@annie444)
 options:
-""" + KanidmArgs.documentation(indentation=2)
+""" + KanidmOauthArgs.documentation(indentation=2)
 
 EXAMPLES = r"""
 # Pass in a message
 - name: Create an OAuth client for Nextcloud
-  annie444.base.kanidm:
+  annie444.base.kanidm_create_oauth:
     name: nextcloud
     display_name: Nextcloud Document Server
     url: https://nextcloud.example.com
@@ -47,6 +45,10 @@ EXAMPLES = r"""
     image:
         src: https://nextcloud.com/c/uploads/2022/11/logo_nextcloud_blue.svg
         format: svg
+    kanidm:
+        uri: https://kanidm.example.com
+        username: admin
+        password: password
 """
 
 RETURN = r"""
@@ -60,6 +62,11 @@ message:
     type: str
     returned: always
     sample: 'Success'
+changed:
+    description: A boolean value that indicates if the module has made changes.
+    type: bool
+    returned: always
+    sample: true
 """
 
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
@@ -77,7 +84,7 @@ from ..module_utils.kanidm.exceptions import (  # pylint: disable=E0401  # noqa:
 
 def run_module():
     # define available arguments/parameters a user can pass to the module
-    module_args = KanidmArgs.arg_spec()
+    module_args = KanidmOauthArgs.arg_spec()
 
     # seed the result dict in the object
     # we primarily care about changed and state
@@ -96,7 +103,7 @@ def run_module():
     )
 
     try:
-        args: KanidmArgs = KanidmArgs(**module.params)
+        args: KanidmOauthArgs = KanidmOauthArgs(**module.params)
     except KanidmArgsException as e:
         module.fail_json(msg=f"Error parsing arguments: {e}", **result)
     except KanidmRequiredOptionError as e:
