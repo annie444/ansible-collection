@@ -11,6 +11,16 @@ from .exceptions import (
     KanidmArgsException,
 )
 from requests.sessions import Session
+from requests.auth import AuthBase
+
+
+class BearerAuth(AuthBase):
+    def __init__(self, token):
+        self.token = token
+
+    def __call__(self, r):
+        r.headers["Authorization"] = "Bearer " + self.token
+        return r
 
 
 class Kanidm(object):
@@ -21,25 +31,24 @@ class Kanidm(object):
         self.json: Dict | None = None
         self.token: str | None = None
         self.text: str | None = None
-        self.verify: bool | str = self.args.kanidm.verify_ca
+        self.session.verify = self.args.kanidm.verify_ca
         if self.args.kanidm.ca_path is not None:
             if self.args.kanidm.ca_path.is_file():
-                self.verify = str(
+                self.session.verify = str(
                     self.args.kanidm.ca_path.expanduser().absolute().parent
                 )
             else:
-                self.verify = str(self.args.kanidm.ca_path.expanduser().absolute())
+                self.session.verify = str(
+                    self.args.kanidm.ca_path.expanduser().absolute()
+                )
 
-    def set_headers(self, with_auth: bool = True):
-        self.session.headers.clear()
+    def set_headers(self):
         self.session.headers["User-Agent"] = "Ansible-Kanidm"
         self.session.headers["Content-Type"] = "application/json"
         self.session.headers["Cache-Control"] = "no-cache"
         self.session.headers["Accept"] = "*/*"
         self.session.headers["Accept-Encoding"] = "gzip, deflate, br"
         self.session.headers["Connection"] = "keep-alive"
-        if with_auth:
-            self.session.headers["Authorization"] = f"Bearer {self.token}"
 
     @property
     def error(self) -> str:
@@ -173,23 +182,20 @@ class Kanidm(object):
             self.token = self.args.kanidm.token
         self.set_headers()
         self.session.cookies.clear_expired_cookies()
-        self.response = self.session.get(
-            f"{self.args.kanidm.uri}/v1/auth/valid", verify=self.verify
-        )
+        self.response = self.session.get(f"{self.args.kanidm.uri}/v1/auth/valid")
         if self.response.status_code == 200:
-            self.token = self.args.kanidm.token
+            self.session.auth = BearerAuth(self.args.kanidm.token)
             return True
         return False
 
     def login(self) -> bool:
         if self.args.kanidm.username is None or self.args.kanidm.password is None:
             raise KanidmArgsException("No username or password specified")
-        self.set_headers(False)
+        self.set_headers()
         self.session.cookies.clear_expired_cookies()
 
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/auth",
-            verify=self.verify,
             json={
                 "step": {
                     "init2": {
@@ -215,7 +221,6 @@ class Kanidm(object):
 
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/auth",
-            verify=self.verify,
             json={
                 "step": {
                     "begin": "password",
@@ -237,7 +242,6 @@ class Kanidm(object):
 
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/auth",
-            verify=self.verify,
             json={
                 "step": {
                     "cred": {
@@ -257,7 +261,7 @@ class Kanidm(object):
         if "success" not in self.json["state"]:
             return False
 
-        self.token = self.json["state"]["success"]
+        self.session.auth = BearerAuth(self.json["state"]["success"])
         return True
 
     def create_basic_client(self) -> bool:
@@ -269,7 +273,6 @@ class Kanidm(object):
         self.set_headers()
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/oauth2/_basic",
-            verify=self.verify,
             json={
                 "attrs": {
                     "name": [self.args.name],
@@ -291,7 +294,6 @@ class Kanidm(object):
         self.set_headers()
         self.response = self.session.get(
             f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}",
-            verify=self.verify,
         )
 
         return self.verify_response()
@@ -309,7 +311,6 @@ class Kanidm(object):
         self.set_headers()
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/oauth2/_public",
-            verify=self.verify,
             json={
                 "attrs": {
                     "name": [self.args.name],
@@ -335,7 +336,6 @@ class Kanidm(object):
         self.set_headers()
         self.response = self.session.post(
             f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_scopemap/{self.args.group}",
-            verify=self.verify,
             json=self.args.scopes,
         )
 
@@ -351,7 +351,6 @@ class Kanidm(object):
             self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_sup_scopemap/{self.args.sup_scopes[index].group}",
-                verify=self.verify,
                 json=self.args.sup_scopes[index].scopes,
             )
 
@@ -360,7 +359,6 @@ class Kanidm(object):
                 self.set_headers()
                 self.response = self.session.post(
                     f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_sup_scopemap/{sup_scope.group}",
-                    verify=self.verify,
                     json=sup_scope.scopes,
                 )
                 if not self.verify_response():
@@ -375,26 +373,26 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No name specified")
 
         self.args.image.get()
-        self.session.headers.clear()
         self.session.headers["User-Agent"] = "Ansible-Kanidm"
         self.session.headers["Cache-Control"] = "no-cache"
         self.session.headers["Accept"] = "*/*"
         self.session.headers["Accept-Encoding"] = "gzip, deflate, br"
         self.session.headers["Connection"] = "keep-alive"
-        self.session.headers["Authorization"] = f"Bearer {self.token}"
+        self.session.headers["Content-Type"] = "multipart/form-data"
 
         with open(self.args.image.src, "rb") as f:
-            self.response = self.session.post(
-                f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_image",
-                verify=self.verify,
-                files={
-                    "image": (
-                        f"{self.args.name}.{self.args.image.format.value}",
-                        f,
-                        self.args.image.format.mime(),
-                    )
-                },
-            )
+            contents = f.read()
+
+        self.response = self.session.post(
+            f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_image",
+            files={
+                "image": (
+                    f"{self.args.name}.{self.args.image.format.value}",
+                    contents,
+                    self.args.image.format.mime(),
+                )
+            },
+        )
 
         if self.response.status_code < 200 or self.response.status_code >= 300:
             return False
@@ -407,7 +405,6 @@ class Kanidm(object):
         self.set_headers()
         self.response = self.session.patch(
             f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}",
-            verify=self.verify,
             json={
                 "attrs": attrs,
             },
@@ -481,7 +478,6 @@ class Kanidm(object):
             self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/_claimmap/{self.args.name}/{self.args.group}",
-                verify=self.verify,
                 json=c.values,
             )
             if not self.verify_response():
@@ -500,7 +496,6 @@ class Kanidm(object):
             self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_claimmap/{self.args.claim_join}",
-                verify=self.verify,
                 json=c.values,
             )
             if not self.verify_response():
@@ -518,7 +513,6 @@ class Kanidm(object):
             self.set_headers()
             self.response = self.session.post(
                 f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_attr/oauth2_rs_origin",
-                verify=self.verify,
                 json=[url],
             )
             if not self.verify_response():
@@ -532,7 +526,6 @@ class Kanidm(object):
         self.set_headers()
         self.response = self.session.get(
             f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_basic_secret",
-            verify=self.verify,
         )
 
         return self.verify_response()
