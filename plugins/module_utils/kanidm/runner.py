@@ -12,10 +12,11 @@ from .exceptions import (
 )
 from requests.sessions import Session
 from requests.auth import AuthBase
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 
 class BearerAuth(AuthBase):
-    def __init__(self, token):
+    def __init__(self, token: str):
         self.token = token
 
     def __call__(self, r):
@@ -194,7 +195,6 @@ class Kanidm(object):
         self.session.cookies.clear_expired_cookies()
         self.response = self.session.get(f"{self.args.kanidm.uri}/v1/auth/valid")
         if self.response.status_code == 200:
-            self.session.auth = BearerAuth(self.args.kanidm.token)
             return True
         return False
 
@@ -388,20 +388,25 @@ class Kanidm(object):
         self.session.headers["Accept"] = "*/*"
         self.session.headers["Accept-Encoding"] = "gzip, deflate, br"
         self.session.headers["Connection"] = "keep-alive"
-        self.session.headers["Content-Type"] = "multipart/form-data"
 
         with open(self.args.image.src, "rb") as f:
             contents = f.read()
 
-        self.response = self.session.post(
-            f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_image",
-            files={
+        m = MultipartEncoder(
+            {
                 "image": (
                     f"{self.args.name}.{self.args.image.format.value}",
                     contents,
                     self.args.image.format.mime(),
                 )
-            },
+            }
+        )
+
+        self.session.headers["Content-Type"] = m.content_type
+
+        self.response = self.session.post(
+            f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_image",
+            data=m,
         )
 
         if self.response.status_code < 200 or self.response.status_code >= 300:
