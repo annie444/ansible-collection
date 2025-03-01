@@ -1,5 +1,4 @@
 from typing import Iterable, Optional, Dict, List, TypedDict, Any, Set, Tuple
-from datetime import timedelta
 from requests import Response, PreparedRequest, Request
 from .arg_specs import (
     KanidmOauthArgs,
@@ -13,7 +12,7 @@ from .exceptions import (
 )
 from requests.sessions import Session
 from requests.auth import AuthBase
-from requests_toolbelt.multipart.encoder import MultipartEncoder
+from requests_toolbelt.multipart.encoder import MultipartEncoder, FileWrapper
 import json
 
 
@@ -147,9 +146,9 @@ class Kanidm(object):
                     self.args.kanidm.ca_path.expanduser().absolute()
                 )
 
-    def set_headers(self):
+    def set_headers(self, content_type: str = "application/json"):
         self.session.headers["User-Agent"] = "Ansible-Kanidm"
-        self.session.headers["Content-Type"] = "application/json"
+        self.session.headers["Content-Type"] = content_type
         self.session.headers["Cache-Control"] = "no-cache"
         self.session.headers["Accept"] = "*/*"
         self.session.headers["Accept-Encoding"] = "gzip, deflate, br"
@@ -170,10 +169,6 @@ class Kanidm(object):
             )
 
         if not self.get_client():
-            with open(
-                "/Users/annieehler/Projects/JVP/failed/creating_client", "w"
-            ) as f:
-                f.write(json.dumps(self.responses))
             if not self.args.public:
                 if not self.create_basic_client():
                     raise KanidmException(
@@ -183,6 +178,10 @@ class Kanidm(object):
                 if not self.create_public_client():
                     raise KanidmException(
                         f"Unable to create or get public client {self.args.name}. Got {self.error}"
+                    )
+                if not self.set_localhost_redirect():
+                    raise KanidmException(
+                        f"Unable to set localhost redirect policy for client {self.args.name}. Got {self.error}"
                     )
 
         if not self.get_client():
@@ -213,11 +212,6 @@ class Kanidm(object):
         if not self.set_preferred_username():
             raise KanidmException(
                 f"Unable to set preferred username for client {self.args.name}. Got {self.error}"
-            )
-
-        if not self.set_localhost_redirect():
-            raise KanidmException(
-                f"Unable to set localhost redirect policy for client {self.args.name}. Got {self.error}"
             )
 
         if not self.set_strict_redirect():
@@ -287,8 +281,9 @@ class Kanidm(object):
         path: str,
         json: Optional[Iterable] = None,
         data: Optional[Any] = None,
+        content_type: str = "application/json",
     ) -> bool:
-        self.set_headers()
+        self.set_headers(content_type=content_type)
         pre_req = Request("POST", f"{self.args.kanidm.uri}{path}")
         if json is not None:
             pre_req.json = json
@@ -451,7 +446,10 @@ class Kanidm(object):
         ):
             return False
 
-        if self.response.text is None or self.response.text == "":
+        try:
+            self.text = self.json["attrs"]["uuid"][0]
+        except Exception:
+            self.text = ""
             return False
 
         return True
@@ -536,7 +534,7 @@ class Kanidm(object):
             {
                 "image": (
                     f"{self.args.name}.{self.args.image.format.value}",
-                    open(self.args.image.src, "rb"),
+                    FileWrapper(open(self.args.image.src, "rb")),
                     self.args.image.format.mime(),
                 )
             }
@@ -548,6 +546,7 @@ class Kanidm(object):
             name="add_image",
             path=f"/v1/oauth2/{self.args.name}/_image",
             data=m,
+            content_type=m.content_type,
         ):
             return False
 

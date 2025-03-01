@@ -75,6 +75,7 @@ def fail_json(*args, **kwargs):
     if os.environ.get("ANSIBLE_VERBOSITY", "0").isnumeric():
         verbosity = int(os.environ.get("ANSIBLE_VERBOSITY", "0"))
         if verbosity >= 1:
+            kwargs["time"] = datetime.now().isoformat(timespec="microseconds")
             if verbosity >= 3 and "requests" in kwargs and "responses" in kwargs:
                 paired_calls = {}
                 for req, data in kwargs["requests"].items():
@@ -94,8 +95,7 @@ def fail_json(*args, **kwargs):
                 if not dir.exists():
                     os.makedirs(dir)
                 with open(
-                    dir
-                    / f"{datetime.now().isoformat(timespec='microseconds')}_test_kanidm_create_oauth.json",
+                    dir / f"{kwargs['time']}_test_kanidm_create_oauth.json",
                     "w",
                 ) as f:
                     f.write(json.dumps(kwargs, indent=4))
