@@ -5,6 +5,9 @@ __pycache__/
 *$py.class
 .ansible/
 
+failed.json
+failed/
+
 # C extensions
 *.so
 
