@@ -3,18 +3,18 @@ name: base
 version: 1.0.0
 readme: README.md
 authors:
-- Annie Ehler <annie.ehler.4@gmail.com>
+  - Annie Ehler <annie.ehler.4@gmail.com>
 description: A basic collection for my personal ansible playbooks
 license_file: LICENSE
 tags:
-- linux
-- tools
+  - linux
+  - tools
 dependencies:
-  ansible.utils: '*'
+  ansible.utils: "*"
 repository: https://github.com/annie444/ansible-collection
 documentation: http://docs.example.com
 homepage: http://example.com
 issues: http://example.com/issue/tracker
 build_ignore:
-- .gitignore
-- changelogs/.plugin-cache.yaml
+  - .gitignore
+  - changelogs/.plugin-cache.yaml
