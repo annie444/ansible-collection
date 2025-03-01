@@ -67,6 +67,14 @@ changed:
     type: bool
     returned: always
     sample: true
+requests:
+    description: A dictionary of request names and their objects
+    type: dict
+    returned: always
+responses:
+    description: A dictionary or request names and their response objects
+    type: dict
+    returned: always
 """
 
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
@@ -91,7 +99,7 @@ def run_module():
     # changed is if this module effectively modified the target
     # state will include any data that you want your module to pass back
     # for consumption, for example, in a subsequent task
-    result = dict(changed=False, message="", secret="")
+    result = dict(changed=False, message="", secret="", requests={}, responses={})
 
     # the AnsibleModule object will be our abstraction working with Ansible
     # this includes instantiation, a couple of common attr would be the
@@ -131,20 +139,40 @@ def run_module():
     try:
         result["secret"] = kanidm.create_oauth_client()
     except KanidmArgsException as e:
+        result["requests"] = kanidm.requests
+        result["responses"] = kanidm.responses
+        result["message"] = "failed"
         module.fail_json(msg=f"Error parsing arguments: {e}", **result)
     except KanidmRequiredOptionError as e:
+        result["requests"] = kanidm.requests
+        result["responses"] = kanidm.responses
+        result["message"] = "failed"
         module.fail_json(msg=f"Missing required arguments: {e}", **result)
     except KanidmAuthenticationFailure as e:
+        result["requests"] = kanidm.requests
+        result["responses"] = kanidm.responses
+        result["message"] = "failed"
         module.fail_json(msg=f"Authentication failed: {e}", **result)
     except KanidmException as e:
+        result["requests"] = kanidm.requests
+        result["responses"] = kanidm.responses
+        result["message"] = "failed"
         module.fail_json(msg=f"Kanidm error: {e}", **result)
     except KanidmModuleError as e:
+        result["requests"] = kanidm.requests
+        result["responses"] = kanidm.responses
+        result["message"] = "failed"
         module.fail_json(msg=f"Module error: {e}", **result)
     except Exception as e:
+        result["requests"] = kanidm.requests
+        result["responses"] = kanidm.responses
+        result["message"] = "failed"
         module.fail_json(msg=f"Unexpected error: {e}", **result)
 
     result["message"] = "success"
     result["changed"] = True
+    result["requests"] = kanidm.requests
+    result["responses"] = kanidm.responses
 
     # in the event of a successful module execution, you will want to
     # simple AnsibleModule.exit_json(), passing the key/value results
