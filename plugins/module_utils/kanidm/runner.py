@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List, TypedDict, Any, Set, Tuple
+from typing import Iterable, Optional, Dict, List, TypedDict, Any, Set, Tuple
 from datetime import timedelta
 from requests import Response, PreparedRequest, Request
 from requests.models import CaseInsensitiveDict
@@ -15,6 +15,7 @@ from .exceptions import (
 from requests.sessions import Session
 from requests.auth import AuthBase
 from requests_toolbelt.multipart.encoder import MultipartEncoder
+import json
 
 
 class BearerAuth(AuthBase):
@@ -29,30 +30,47 @@ class BearerAuth(AuthBase):
 class RequestDict(TypedDict):
     body: Any
     headers: CaseInsensitiveDict[str]
-    method: str | None
-    url: str | None
+    method: str
+    url: str
 
 
 def from_prep_req(req: PreparedRequest) -> RequestDict:
+    if req.body is not None:
+        try:
+            body = json.loads(req.body)
+        except Exception:
+            body = req.body
+    else:
+        body = ""
+
+    if req.method is not None:
+        method = req.method
+    else:
+        method = ""
+
+    if req.url is not None:
+        url = req.url
+    else:
+        url = ""
+
     return {
-        "body": req.body,
+        "body": body,
         "headers": req.headers,
-        "method": req.method,
-        "url": req.url,
+        "method": method,
+        "url": url,
     }
 
 
 class ResponseDict(TypedDict):
-    cookies: Dict[str, str] | None
-    elapsed: timedelta
-    encoding: str | None
+    cookies: Dict[str, str]
+    elapsed: str
+    encoding: str
     headers: CaseInsensitiveDict[str]
-    history: Any
     redirect: bool
-    json: Dict | List | Set | Tuple | None
+    json: Dict | List | Set | Tuple
     reason: str
     status_code: int
-    text: str | None
+    text: str
     url: str
 
 
@@ -60,24 +78,33 @@ def from_resp(res: Response) -> ResponseDict:
     try:
         js = res.json()
     except Exception:
-        js = None
+        js = {}
 
     try:
         cookies = res.cookies.get_dict()
     except Exception:
-        cookies = None
+        cookies = {}
+
+    if res.text is not None:
+        try:
+            text = json.loads(res.text)
+        except Exception:
+            text = res.text
+    else:
+        text = ""
+
+    elapsed = str(res.elapsed)
 
     return {
         "cookies": cookies,
-        "elapsed": res.elapsed,
+        "elapsed": elapsed,
         "encoding": res.encoding if res.encoding is not None else res.apparent_encoding,
         "headers": res.headers,
-        "history": res.history,
         "redirect": res.is_redirect,
         "json": js,
         "reason": res.reason,
         "status_code": res.status_code,
-        "text": res.text,
+        "text": text,
         "url": res.url,
     }
 
@@ -219,6 +246,48 @@ class Kanidm(object):
         self.text = self.response.text
         return True
 
+    def get(self, name: str, path: str) -> bool:
+        self.set_headers()
+        req = self.session.prepare_request(
+            Request("GET", f"{self.args.kanidm.uri}{path}")
+        )
+        self.send(name, req)
+        return self.verify_response()
+
+    def post(
+        self,
+        name: str,
+        path: str,
+        json: Optional[Iterable] = None,
+        data: Optional[Any] = None,
+    ) -> bool:
+        self.set_headers()
+        pre_req = Request("POST", f"{self.args.kanidm.uri}{path}")
+        if json is not None:
+            pre_req.json = json
+        if data is not None:
+            pre_req.data = data
+        req = self.session.prepare_request(pre_req)
+        self.send(name, req)
+        return self.verify_response()
+
+    def patch(
+        self,
+        name: str,
+        path: str,
+        json: Optional[Iterable] = None,
+        data: Optional[Any] = None,
+    ) -> bool:
+        self.set_headers()
+        pre_req = Request("PATCH", f"{self.args.kanidm.uri}{path}")
+        if json is not None:
+            pre_req.json = json
+        if data is not None:
+            pre_req.data = data
+        req = self.session.prepare_request(pre_req)
+        self.send(name, req)
+        return self.verify_response()
+
     def send(self, name: str, req: PreparedRequest):
         self.requests[name] = from_prep_req(req)
         self.response = self.session.send(req)
@@ -256,40 +325,29 @@ class Kanidm(object):
             or self.session.auth.token is None
         ):
             self.session.auth = BearerAuth(self.args.kanidm.token)
-        self.set_headers()
-        self.session.cookies.clear_expired_cookies()
-        req = self.session.prepare_request(
-            Request("GET", f"{self.args.kanidm.uri}/v1/auth/valid")
-        )
-        self.send("check_token", req)
-        if self.response.status_code == 200:
-            return True
-        return False
+
+        if not self.get("check_token", "/v1/auth/valid"):
+            return False
+
+        return True
 
     def login(self) -> bool:
         if self.args.kanidm.username is None or self.args.kanidm.password is None:
             raise KanidmArgsException("No username or password specified")
-        self.set_headers()
-        self.session.cookies.clear_expired_cookies()
 
-        req = self.session.prepare_request(
-            Request(
-                "POST",
-                f"{self.args.kanidm.uri}/v1/auth",
-                json={
-                    "step": {
-                        "init2": {
-                            "username": self.args.kanidm.username,
-                            "issue": "token",
-                            "privileged": True,
-                        }
+        if not self.post(
+            "login_init",
+            "/v1/auth",
+            json={
+                "step": {
+                    "init2": {
+                        "username": self.args.kanidm.username,
+                        "issue": "token",
+                        "privileged": True,
                     }
-                },
-            )
-        )
-        self.send("login_init", req)
-
-        if not self.verify_response():
+                }
+            },
+        ):
             return False
 
         assert self.json is not None
@@ -301,20 +359,15 @@ class Kanidm(object):
         if "password" not in self.json["state"]["choose"]:
             return False
 
-        req = self.session.prepare_request(
-            Request(
-                "POST",
-                f"{self.args.kanidm.uri}/v1/auth",
-                json={
-                    "step": {
-                        "begin": "password",
-                    }
-                },
-            )
-        )
-        self.send("login_begin", req)
-
-        if not self.verify_response():
+        if not self.post(
+            "login_begin",
+            "/v1/auth",
+            json={
+                "step": {
+                    "begin": "password",
+                }
+            },
+        ):
             return False
 
         assert self.json is not None
@@ -326,22 +379,17 @@ class Kanidm(object):
         if "password" not in self.json["state"]["continue"]:
             return False
 
-        req = self.session.prepare_request(
-            Request(
-                "POST",
-                f"{self.args.kanidm.uri}/v1/auth",
-                json={
-                    "step": {
-                        "cred": {
-                            "password": self.args.kanidm.password,
-                        }
+        if not self.post(
+            "login_send",
+            "/v1/auth",
+            json={
+                "step": {
+                    "cred": {
+                        "password": self.args.kanidm.password,
                     }
-                },
-            )
-        )
-        self.send("login_send", req)
-
-        if not self.verify_response():
+                }
+            },
+        ):
             return False
 
         assert self.json is not None
@@ -360,41 +408,34 @@ class Kanidm(object):
         if self.args.url is None:
             raise KanidmRequiredOptionError("No url specified")
 
-        self.set_headers()
-        req = self.session.prepare_request(
-            Request(
-                "POST",
-                f"{self.args.kanidm.uri}/v1/oauth2/_basic",
-                json={
-                    "attrs": {
-                        "name": [self.args.name],
-                        "displayname": [self.args.display_name],
-                        "oauth2_rs_origin_landing": [self.args.url],
-                        "oauth2_strict_redirect_uri": [
-                            str(self.args.strict_redirect).lower()
-                        ],
-                    }
-                },
-            )
+        return self.post(
+            "create_basic_client",
+            "/v1/oauth2/_basic",
+            json={
+                "attrs": {
+                    "name": [self.args.name],
+                    "displayname": [self.args.display_name],
+                    "oauth2_rs_origin_landing": [self.args.url],
+                    "oauth2_strict_redirect_uri": [
+                        str(self.args.strict_redirect).lower()
+                    ],
+                }
+            },
         )
-        self.send("create_basic_client", req)
-
-        return self.verify_response()
 
     def get_client(self) -> bool:
         if self.args.name is None:
             raise KanidmRequiredOptionError("No name specified")
 
-        self.set_headers()
-        req = self.session.prepare_request(
-            Request(
-                "GET",
-                f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}",
-            )
-        )
-        self.send("get_client", req)
+        if not self.get(
+            "get_client",
+            "/v1/oauth2/{self.args.name}",
+        ):
+            return False
 
-        return self.verify_response()
+        if self.response.text is None or self.response.text == "":
+            return False
+        return True
 
     def create_public_client(self) -> bool:
         if not self.args.public:
@@ -406,26 +447,20 @@ class Kanidm(object):
         if self.args.url is None:
             raise KanidmRequiredOptionError("No url specified")
 
-        self.set_headers()
-        req = self.session.prepare_request(
-            Request(
-                "POST",
-                f"{self.args.kanidm.uri}/v1/oauth2/_public",
-                json={
-                    "attrs": {
-                        "name": [self.args.name],
-                        "displayname": [self.args.display_name],
-                        "oauth2_rs_origin_landing": [self.args.url],
-                        "oauth2_strict_redirect_uri": [
-                            str(self.args.strict_redirect).lower()
-                        ],
-                    }
-                },
-            )
+        return self.post(
+            "create_public_client",
+            "/v1/oauth2/_public",
+            json={
+                "attrs": {
+                    "name": [self.args.name],
+                    "displayname": [self.args.display_name],
+                    "oauth2_rs_origin_landing": [self.args.url],
+                    "oauth2_strict_redirect_uri": [
+                        str(self.args.strict_redirect).lower()
+                    ],
+                }
+            },
         )
-        self.send("create_public_client", req)
-
-        return self.verify_response()
 
     def update_scope_map(self) -> bool:
         if not self.args.group:
@@ -435,17 +470,11 @@ class Kanidm(object):
         if not self.args.scopes:
             raise KanidmRequiredOptionError("No scopes specified")
 
-        self.set_headers()
-        req = self.session.prepare_request(
-            Request(
-                "POST",
-                f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_scopemap/{self.args.group}",
-                json=self.args.scopes,
-            )
+        return self.post(
+            "update_scope_map",
+            f"/v1/oauth2/{self.args.name}/_scopemap/{self.args.group}",
+            json=self.args.scopes,
         )
-        self.send("update_scope_map", req)
-
-        return self.verify_response()
 
     def update_sup_scope_map(self, index: Optional[int] = None) -> bool:
         if not self.args.sup_scopes:
@@ -454,28 +483,19 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No name specified")
 
         if index is not None:
-            self.set_headers()
-            req = self.session.prepare_request(
-                Request(
-                    "POST",
-                    f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_sup_scopemap/{self.args.sup_scopes[index].group}",
-                    json=self.args.sup_scopes[index].scopes,
-                )
+            return self.post(
+                f"update_sup_scope_map[{index}]",
+                f"/v1/oauth2/{self.args.name}/_sup_scopemap/{self.args.sup_scopes[index].group}",
+                json=self.args.sup_scopes[index].scopes,
             )
-            self.send(f"update_scope_map[{index}]", req)
 
         else:
             for i, sup_scope in enumerate(self.args.sup_scopes):
-                self.set_headers()
-                req = self.session.prepare_request(
-                    Request(
-                        "POST",
-                        f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_sup_scopemap/{sup_scope.group}",
-                        json=sup_scope.scopes,
-                    )
-                )
-                self.send(f"update_scope_map[{i}]", req)
-                if not self.verify_response():
+                if not self.post(
+                    f"update_sup_scope_map[{i}]",
+                    f"/v1/oauth2/{self.args.name}/_sup_scopemap/{sup_scope.group}",
+                    json=sup_scope.scopes,
+                ):
                     return False
 
         return self.verify_response()
@@ -505,36 +525,26 @@ class Kanidm(object):
 
         self.session.headers["Content-Type"] = m.content_type
 
-        req = self.session.prepare_request(
-            Request(
-                "POST",
-                f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_image",
-                data=m,
-            )
-        )
-        self.send("add_image", req)
-
-        if self.response.status_code < 200 or self.response.status_code >= 300:
+        if not self.post(
+            "add_image",
+            f"/v1/oauth2/{self.args.name}/_image",
+            data=m,
+        ):
             return False
+
         return True
 
     def patch_oauth(self, name: str, attrs: Dict[str, List[str]]) -> bool:
         if self.args.name is None:
             raise KanidmRequiredOptionError("No name specified")
 
-        self.set_headers()
-        req = self.session.prepare_request(
-            Request(
-                "PATCH",
-                f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}",
-                json={
-                    "attrs": attrs,
-                },
-            )
+        return self.patch(
+            name,
+            f"/v1/oauth2/{self.args.name}",
+            json={
+                "attrs": attrs,
+            },
         )
-        self.send(name, req)
-
-        return self.verify_response()
 
     def set_pkce(self) -> bool:
         if self.args.pkce is None:
@@ -608,16 +618,11 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No group specified")
 
         for i, c in enumerate(self.args.custom_claims):
-            self.set_headers()
-            req = self.session.prepare_request(
-                Request(
-                    "POST",
-                    f"{self.args.kanidm.uri}/v1/oauth2/_claimmap/{self.args.name}/{self.args.group}",
-                    json=c.values,
-                )
-            )
-            self.send(f"update_custom_claim_map[{i}]", req)
-            if not self.verify_response():
+            if not self.post(
+                f"update_custom_claim_map[{i}]",
+                f"/v1/oauth2/_claimmap/{self.args.name}/{self.args.group}",
+                json=c.values,
+            ):
                 return False
         return True
 
@@ -630,16 +635,11 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No claims specified")
 
         for i, c in enumerate(self.args.custom_claims):
-            self.set_headers()
-            req = self.session.prepare_request(
-                Request(
-                    "POST",
-                    f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_claimmap/{self.args.claim_join}",
-                    json=c.values,
-                )
-            )
-            self.send(f"update_custom_claim_join[{i}]", req)
-            if not self.verify_response():
+            if not self.post(
+                f"update_custom_claim_join[{i}]",
+                f"/v1/oauth2/{self.args.name}/_claimmap/{self.args.claim_join}",
+                json=c.values,
+            ):
                 return False
 
         return True
@@ -651,16 +651,11 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No redirect URL specified")
 
         for url in self.args.redirect_url:
-            self.set_headers()
-            req = self.session.prepare_request(
-                Request(
-                    "POST",
-                    f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_attr/oauth2_rs_origin",
-                    json=[url],
-                )
-            )
-            self.send(f"add_redirect_url[{url}]", req)
-            if not self.verify_response():
+            if not self.session.post(
+                f"add_redirect_url[{url}]",
+                f"/v1/oauth2/{self.args.name}/_attr/oauth2_rs_origin",
+                json=[url],
+            ):
                 return False
         return True
 
@@ -668,10 +663,7 @@ class Kanidm(object):
         if self.args.name is None:
             raise KanidmRequiredOptionError("No name specified")
 
-        self.set_headers()
-        req = self.session.prepare_request(Request("GET",
-            f"{self.args.kanidm.uri}/v1/oauth2/{self.args.name}/_basic_secret",
-        ))
-        self.send("get_client_secret", req)
-
-        return self.verify_response()
+        return self.get(
+            "get_client_secret",
+            f"/v1/oauth2/{self.args.name}/_basic_secret",
+        )
