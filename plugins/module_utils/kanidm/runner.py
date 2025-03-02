@@ -638,7 +638,7 @@ class Kanidm(object):
         for i, c in enumerate(self.args.custom_claims):
             if not self.post(
                 name=f"update_custom_claim_map[{i}]",
-                path=f"/v1/oauth2/_claimmap/{self.args.name}/{self.args.group}",
+                path=f"/v1/oauth2/{self.args.name}/_claimmap/{self.args.name}/{self.args.group}",
                 json=c.values,
             ):
                 return False

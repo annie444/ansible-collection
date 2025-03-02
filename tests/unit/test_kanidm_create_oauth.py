@@ -282,3 +282,145 @@ class TestKanidmOauthModule(unittest.TestCase):
         self.assertIsInstance(raised.data["secret"], str)
         self.assertTrue(len(raised.data["secret"]) > 0)
         self.assertEqual(raised.data["message"].lower(), "success")
+
+    def test_kanidm_oauth_basic_all_args(self):
+        with self.assertRaises(AnsibleExitJson) as ej:
+            set_module_args(
+                {
+                    "name": "all_args",
+                    "display_name": "Oauth with all args",
+                    "url": "https://allargs.com",
+                    "redirect_url": [
+                        "https://allargs.com/apps/oauth2/authorize",
+                        "https://allargs.com/apps/oauth2/api/v1/token",
+                        "https://allargs.com/index.php/apps/oauth2/authorize",
+                        "https://allargs.com/index.php/apps/oauth2/api/v1/token",
+                        "https://allargs.com/index.php/apps/oauth2/authorize/index.html",
+                        "https://allargs.com/index.php/apps/oauth2/api/v1/token/index.html",
+                    ],
+                    "scopes": [
+                        "openid",
+                        "profile",
+                        "email",
+                        "address",
+                        "phone",
+                    ],
+                    "group": "idm_admins",
+                    "public": False,
+                    "claim_join": "array",
+                    "pkce": True,
+                    "legacy_crypto": False,
+                    "strict_redirect": True,
+                    "local_redirect": False,
+                    "username": "short",
+                    "sup_scopes": [
+                        {
+                            "group": "idm_admins",
+                            "scopes": ["openid", "profile", "email", "groups"],
+                        },
+                        {
+                            "group": "idm_all_persons",
+                            "scopes": ["openid", "profile", "email", "ssh_publickeys"],
+                        },
+                    ],
+                    "image": {
+                        "src": "https://nextcloud.com/c/uploads/2022/11/logo_nextcloud_blue.svg",
+                        "format": "svg",
+                    },
+                    "custom_claims": [
+                        {
+                            "name": "custom_claim",
+                            "values": ["custom_value1", "custom_value2"],
+                            "group": "idm_admins",
+                        },
+                        {
+                            "name": "custom_claim2",
+                            "values": ["custom_value3", "custom_value4"],
+                            "group": "idm_all_persons",
+                        },
+                    ],
+                    "kanidm": {
+                        "uri": "https://localhost:8443",
+                        "username": "idm_admin",
+                        "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
+                        "verify_ca": False,
+                    },
+                }
+            )
+            kanidm_create_oauth.main()
+        raised = ej.exception
+        self.assertEqual(raised.data["changed"], True)
+        self.assertIsInstance(raised.data["secret"], str)
+        self.assertTrue(len(raised.data["secret"]) > 0)
+        self.assertEqual(raised.data["message"].lower(), "success")
+
+    def test_kanidm_oauth_public_all_args(self):
+        with self.assertRaises(AnsibleExitJson) as ej:
+            set_module_args(
+                {
+                    "name": "all_args_public",
+                    "display_name": "Oauth public with all args",
+                    "url": "https://allargs.com",
+                    "public": True,
+                    "redirect_url": [
+                        "https://allargs.com/apps/oauth2/authorize",
+                        "https://allargs.com/apps/oauth2/api/v1/token",
+                        "https://allargs.com/index.php/apps/oauth2/authorize",
+                        "https://allargs.com/index.php/apps/oauth2/api/v1/token",
+                        "https://allargs.com/index.php/apps/oauth2/authorize/index.html",
+                        "https://allargs.com/index.php/apps/oauth2/api/v1/token/index.html",
+                    ],
+                    "scopes": [
+                        "openid",
+                        "profile",
+                        "email",
+                        "address",
+                        "phone",
+                    ],
+                    "group": "idm_admins",
+                    "local_redirect": True,
+                    "claim_join": "array",
+                    "pkce": True,
+                    "legacy_crypto": False,
+                    "strict_redirect": True,
+                    "username": "short",
+                    "sup_scopes": [
+                        {
+                            "group": "idm_admins",
+                            "scopes": ["openid", "profile", "email", "groups"],
+                        },
+                        {
+                            "group": "idm_all_persons",
+                            "scopes": ["openid", "profile", "email", "ssh_publickeys"],
+                        },
+                    ],
+                    "image": {
+                        "src": "https://nextcloud.com/c/uploads/2022/11/logo_nextcloud_blue.svg",
+                        "format": "svg",
+                    },
+                    "custom_claims": [
+                        {
+                            "name": "custom_claim",
+                            "values": ["custom_value1", "custom_value2"],
+                            "group": "idm_admins",
+                        },
+                        {
+                            "name": "custom_claim2",
+                            "values": ["custom_value3", "custom_value4"],
+                            "group": "idm_all_persons",
+                        },
+                    ],
+                    "kanidm": {
+                        "uri": "https://localhost:8443",
+                        "username": "idm_admin",
+                        "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
+                        "verify_ca": False,
+                    },
+                }
+            )
+            kanidm_create_oauth.main()
+        raised = ej.exception
+        self.assertEqual(raised.data["changed"], True)
+        self.assertIsInstance(raised.data["secret"], str)
+        self.assertTrue(len(raised.data["secret"]) > 0)
+        self.assertEqual(raised.data["message"].lower(), "success")
