@@ -81,13 +81,11 @@ def basic_from_prep_req(req: PreparedRequest) -> str:
     if req.body is not None:
         try:
             body = json.loads(req.body)
+            return f"{method} {url} {body}"
         except Exception:
-            body = None
+            return f"{method} {url}"
 
-    if body is not None:
-        return f"{method} {url} {body}"
-    else:
-        return f"{method} {url}"
+    return f"{method} {url}"
 
 
 class ResponseDict(TypedDict):
