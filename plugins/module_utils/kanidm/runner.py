@@ -6,7 +6,6 @@ from .arg_specs import (
 )
 from .exceptions import (
     KanidmAuthenticationFailure,
-    KanidmException,
     KanidmModuleError,
     KanidmRequiredOptionError,
     KanidmArgsException,
@@ -79,7 +78,16 @@ def basic_from_prep_req(req: PreparedRequest) -> str:
     else:
         url = ""
 
-    return f"{method} {url}"
+    if req.body is not None:
+        try:
+            body = json.loads(req.body)
+        except Exception:
+            body = None
+
+    if body is not None:
+        return f"{method} {url} {body}"
+    else:
+        return f"{method} {url}"
 
 
 class ResponseDict(TypedDict):
