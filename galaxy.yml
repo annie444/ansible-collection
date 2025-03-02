@@ -12,9 +12,22 @@ tags:
 dependencies:
   ansible.utils: "*"
 repository: https://github.com/annie444/ansible-collection
-documentation: http://docs.example.com
-homepage: http://example.com
-issues: http://example.com/issue/tracker
+documentation: https://annie444.github.io/ansible-collection
+homepage: https://github.com/annie444/ansible-collection
+issues: https://github.com/annie444/ansible-collection/issues
 build_ignore:
   - .gitignore
   - changelogs/.plugin-cache.yaml
+  - failed/**/*
+  - .venv/**/*
+  - .vscode/**/*
+  - .pytest_cache/**/*
+  - .tox/**/*
+  - .github/**/*
+  - .git/**/*
+  - .devcontainer/**/*
+  - setup-tests.fish
+  - "**/*.tar.gz"
+  - uv.lock
+  - tests/**/*
+  - extensions/**/*

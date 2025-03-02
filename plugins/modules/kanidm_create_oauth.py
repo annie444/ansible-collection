@@ -19,7 +19,8 @@ description:
   - This module creates or updates an OAuth client in Kanidm.
   - This module requires the requests Python package.
 requirements:
-    - requests>=2.32
+    - "requests>=2.32"
+    - "requests-toolbelt>=1"
 author: Annie Ehler (@annie444)
 options:
 """ + KanidmOauthArgs.documentation(indentation=2)
