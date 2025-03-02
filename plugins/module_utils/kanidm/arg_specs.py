@@ -539,9 +539,13 @@ class KanidmOauthArgs:
     sup_scopes: Optional[List[SupScope]] = None
     custom_claims: Optional[List[CustomClaim]] = None
     image: Optional[Image] = None
+    debug: bool = False
 
     def __init__(self, **kwargs):
         # Defaults
+        self.display_name = kwargs.get("display_name", self.name)
+        self.group = "idm_all_persons"
+        self.public = False
         self.claim_join = ClaimJoin.array
         self.pkce = True
         self.legacy_crypto = False
@@ -551,6 +555,7 @@ class KanidmOauthArgs:
         self.sup_scopes = None
         self.custom_claims = None
         self.image = None
+        self.debug = False
 
         # Set args
         try:
@@ -638,6 +643,10 @@ class KanidmOauthArgs:
             if "image" in kwargs:
                 img = Verify(kwargs.get("image"), "image").verify_opt_dict()
                 self.image = Image(**img) if img is not None else None
+            if "debug" in kwargs:
+                self.debug = Verify(kwargs.get("debug"), "debug").verify_default_bool(
+                    False
+                )
         except TypeError as e:
             raise KanidmArgsException(str(e), e)
         except ValueError as e:
@@ -669,6 +678,7 @@ class KanidmOauthArgs:
             "strict_redirect",
             "local_redirect",
             "username",
+            "debug",
         ]
         args.extend(kanidm)
         args.extend(sup_scopes)
@@ -793,6 +803,12 @@ class KanidmOauthArgs:
                 "required": False,
                 "aliases": ["logo"],
                 "documentation": "Image configuration for the OAuth client.",
+            },
+            "debug": {
+                "type": OptionType.BOOL,
+                "default": False,
+                "required": False,
+                "documentation": "Enable debug mode.",
             },
         }
 

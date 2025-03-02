@@ -1,4 +1,4 @@
-from typing import Iterable, Optional, Dict, List, TypedDict, Any, Set, Tuple
+from typing import Callable, Iterable, Optional, Dict, List, TypedDict, Any, Set, Tuple
 from requests import Response, PreparedRequest, Request
 from .arg_specs import (
     KanidmOauthArgs,
@@ -67,6 +67,20 @@ def from_prep_req(req: PreparedRequest) -> RequestDict:
     )
 
 
+def basic_from_prep_req(req: PreparedRequest) -> str:
+    if req.method is not None:
+        method = req.method
+    else:
+        method = ""
+
+    if req.url is not None:
+        url = req.url
+    else:
+        url = ""
+
+    return f"{method} {url}"
+
+
 class ResponseDict(TypedDict):
     cookies: Dict[str, str]
     elapsed: str
@@ -125,6 +139,21 @@ def from_resp(res: Response) -> ResponseDict:
     )
 
 
+def basic_from_resp(res: Response) -> str:
+    return f"{res.status_code} {res.reason} {res.text}"
+
+
+process_request = {
+    True: from_prep_req,
+    False: basic_from_prep_req,
+}
+
+process_response = {
+    True: from_resp,
+    False: basic_from_resp,
+}
+
+
 class Kanidm(object):
     def __init__(self, args: KanidmOauthArgs):
         self.args: KanidmOauthArgs = args
@@ -133,8 +162,14 @@ class Kanidm(object):
         self.json: Dict = {}
         self.token: str | None = None
         self.text: str = ""
-        self.requests: Dict[str, RequestDict] = {}
-        self.responses: Dict[str, ResponseDict] = {}
+        self.process_request: Callable[[PreparedRequest], str | RequestDict] = (
+            process_request[args.debug]
+        )
+        self.process_response: Callable[[Response], str | ResponseDict] = (
+            process_response[args.debug]
+        )
+        self.requests: Dict[str, RequestDict | str] = {}
+        self.responses: Dict[str, ResponseDict | str] = {}
         self.session.verify = self.args.kanidm.verify_ca
         if self.args.kanidm.ca_path is not None:
             if self.args.kanidm.ca_path.is_file():
@@ -311,9 +346,9 @@ class Kanidm(object):
         return self.verify_response()
 
     def send(self, name: str, req: PreparedRequest):
-        self.requests[name] = from_prep_req(req)
+        self.requests[name] = self.process_request(req)
         self.response = self.session.send(req)
-        self.responses[name] = from_resp(self.response)
+        self.responses[name] = self.process_response(self.response)
 
     def authenticate(self):
         if self.args.kanidm.token is None and (
