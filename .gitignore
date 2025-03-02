@@ -8,6 +8,8 @@ __pycache__/
 failed.json
 /failed
 
+annie444-base*.tar.gz
+
 # C extensions
 *.so
 
