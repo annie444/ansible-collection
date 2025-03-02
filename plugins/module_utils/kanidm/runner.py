@@ -7,6 +7,7 @@ from .arg_specs import (
 from .exceptions import (
     KanidmAuthenticationFailure,
     KanidmException,
+    KanidmModuleError,
     KanidmRequiredOptionError,
     KanidmArgsException,
 )
@@ -206,84 +207,84 @@ class Kanidm(object):
         if not self.get_client():
             if not self.args.public:
                 if not self.create_basic_client():
-                    raise KanidmException(
+                    raise KanidmModuleError(
                         f"Unable to create or get client {self.args.name}. Got {self.error}"
                     )
             else:
                 if not self.create_public_client():
-                    raise KanidmException(
+                    raise KanidmModuleError(
                         f"Unable to create or get public client {self.args.name}. Got {self.error}"
                     )
                 if not self.set_localhost_redirect():
-                    raise KanidmException(
+                    raise KanidmModuleError(
                         f"Unable to set localhost redirect policy for client {self.args.name}. Got {self.error}"
                     )
 
         if not self.get_client():
-            raise KanidmException(
+            raise KanidmModuleError(
                 f"Unable to get client {self.args.name}. Got {self.error}"
             )
 
         if not self.add_redirect_urls():
-            raise KanidmException(
+            raise KanidmModuleError(
                 f"Unable to add redirect URLs for client {self.args.name}. Got {self.error}"
             )
 
         if not self.update_scope_map():
-            raise KanidmException(
+            raise KanidmModuleError(
                 f"Unable to update scope map for client {self.args.name}. Got {self.error}"
             )
 
         if not self.set_pkce():
-            raise KanidmException(
+            raise KanidmModuleError(
                 f"Unable to set PKCE for client {self.args.name}. Got {self.error}"
             )
 
         if not self.set_legacy_crypto():
-            raise KanidmException(
+            raise KanidmModuleError(
                 f"Unable to set legacy crypto for client {self.args.name}. Got {self.error}"
             )
 
         if not self.set_preferred_username():
-            raise KanidmException(
+            raise KanidmModuleError(
                 f"Unable to set preferred username for client {self.args.name}. Got {self.error}"
             )
 
         if not self.set_strict_redirect():
-            raise KanidmException(
+            raise KanidmModuleError(
                 f"Unable to set strict redirect for client {self.args.name}. Got {self.error}"
             )
 
         if self.args.image is not None:
             if not self.add_image():
-                raise KanidmException(
+                raise KanidmModuleError(
                     f"Unable to add image for client {self.args.name}. Got {self.error}"
                 )
 
         if self.args.sup_scopes is not None:
             if not self.update_sup_scope_map():
-                raise KanidmException(
+                raise KanidmModuleError(
                     f"Unable to update supplemental scope map for client {self.args.name}. Got {self.error}"
                 )
 
         if self.args.custom_claims is not None:
             if not self.update_custom_claim_map():
-                raise KanidmException(
+                raise KanidmModuleError(
                     f"Unable to update custom claim map for client {self.args.name}. Got {self.error}"
                 )
 
             if not self.update_custom_claim_join():
-                raise KanidmException(
+                raise KanidmModuleError(
                     f"Unable to update custom claim join for client {self.args.name}. Got {self.error}"
                 )
 
         if not self.get_client_secret():
-            raise KanidmException(
+            raise KanidmModuleError(
                 f"Unable to get client secret for client {self.args.name}. Got {self.error}"
             )
 
         if self.text is None:
-            raise KanidmException(
+            raise KanidmModuleError(
                 f"Unable to parse the client secret for client {self.args.name}. Got {self.text}"
             )
 
@@ -674,7 +675,7 @@ class Kanidm(object):
             if not self.post(
                 name=f"update_custom_claim_map[{i}]",
                 path=f"/v1/oauth2/{self.args.name}/_claimmap/{self.args.name}/{self.args.group}",
-                json=c.values,
+                json=[str(v) for v in c.values],
             ):
                 return False
         return True
@@ -691,7 +692,7 @@ class Kanidm(object):
             if not self.post(
                 name=f"update_custom_claim_join[{i}]",
                 path=f"/v1/oauth2/{self.args.name}/_claimmap/{self.args.claim_join}",
-                json=c.values,
+                json=self.args.claim_join,
             ):
                 return False
 

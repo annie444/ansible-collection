@@ -83,11 +83,13 @@ from ..module_utils.kanidm.runner import (  # pylint: disable=E0401  # noqa: E40
     Kanidm,
 )
 from ..module_utils.kanidm.exceptions import (  # pylint: disable=E0401  # noqa: E402
+    KanidmApiError,
     KanidmArgsException,
     KanidmAuthenticationFailure,
     KanidmException,
     KanidmModuleError,
     KanidmRequiredOptionError,
+    KanidmUnexpectedError,
 )
 
 
@@ -114,17 +116,17 @@ def run_module():
     try:
         args: KanidmOauthArgs = KanidmOauthArgs(**module.params)
     except KanidmArgsException as e:
-        module.fail_json(msg=f"Error parsing arguments: {e}", **result)
+        module.fail_json(msg=e.message, **result)
     except KanidmRequiredOptionError as e:
-        module.fail_json(msg=f"Missing required arguments: {e}", **result)
+        module.fail_json(msg=e.message, **result)
     except KanidmAuthenticationFailure as e:
-        module.fail_json(msg=f"Authentication failed: {e}", **result)
+        module.fail_json(msg=e.message, **result)
     except KanidmException as e:
-        module.fail_json(msg=f"Kanidm error: {e}", **result)
+        module.fail_json(msg=e.message, **result)
     except KanidmModuleError as e:
-        module.fail_json(msg=f"Module error: {e}", **result)
+        module.fail_json(msg=e.message, **result)
     except Exception as e:
-        module.fail_json(msg=f"Unexpected error: {e}", **result)
+        module.fail_json(msg=KanidmUnexpectedError(f"{e}").message, **result)
 
     # if the user is working with this module in only check mode we do not
     # want to make any changes to the environment, just return the current
@@ -143,32 +145,42 @@ def run_module():
         result["requests"] = kanidm.requests
         result["responses"] = kanidm.responses
         result["message"] = "failed"
-        module.fail_json(msg=f"Error parsing arguments: {e}", **result)
+        module.fail_json(msg=e.message, **result)
     except KanidmRequiredOptionError as e:
         result["requests"] = kanidm.requests
         result["responses"] = kanidm.responses
         result["message"] = "failed"
-        module.fail_json(msg=f"Missing required arguments: {e}", **result)
+        module.fail_json(msg=e.message, **result)
     except KanidmAuthenticationFailure as e:
         result["requests"] = kanidm.requests
         result["responses"] = kanidm.responses
         result["message"] = "failed"
-        module.fail_json(msg=f"Authentication failed: {e}", **result)
+        module.fail_json(msg=e.message, **result)
     except KanidmException as e:
         result["requests"] = kanidm.requests
         result["responses"] = kanidm.responses
         result["message"] = "failed"
-        module.fail_json(msg=f"Kanidm error: {e}", **result)
+        module.fail_json(msg=e.message, **result)
     except KanidmModuleError as e:
         result["requests"] = kanidm.requests
         result["responses"] = kanidm.responses
         result["message"] = "failed"
-        module.fail_json(msg=f"Module error: {e}", **result)
+        module.fail_json(msg=e.message, **result)
+    except KanidmApiError as e:
+        result["requests"] = kanidm.requests
+        result["responses"] = kanidm.responses
+        result["message"] = "failed"
+        module.fail_json(msg=e.message, **result)
+    except KanidmUnexpectedError as e:
+        result["requests"] = kanidm.requests
+        result["responses"] = kanidm.responses
+        result["message"] = "failed"
+        module.fail_json(msg=e.message, **result)
     except Exception as e:
         result["requests"] = kanidm.requests
         result["responses"] = kanidm.responses
         result["message"] = "failed"
-        module.fail_json(msg=f"Unexpected error: {e}", **result)
+        module.fail_json(msg=KanidmUnexpectedError(f"{e}").message, **result)
 
     result["message"] = "success"
     result["changed"] = True

@@ -543,7 +543,7 @@ class KanidmOauthArgs:
 
     def __init__(self, **kwargs):
         # Defaults
-        self.display_name = kwargs.get("display_name", self.name)
+        self.display_name = kwargs.get("display_name", kwargs.get("name"))
         self.group = "idm_all_persons"
         self.public = False
         self.claim_join = ClaimJoin.array
