@@ -39,7 +39,13 @@ def exit_json(*args, **kwargs):
     if os.environ.get("ANSIBLE_VERBOSITY", "0").isnumeric():
         verbosity = int(os.environ.get("ANSIBLE_VERBOSITY", "0"))
         if verbosity >= 1:
-            if verbosity >= 3 and "requests" in kwargs and "responses" in kwargs:
+            if (
+                verbosity >= 3
+                and "requests" in kwargs
+                and "responses" in kwargs
+                and "name" in list(kwargs["requests"].values())[0]
+                and "name" in list(kwargs["responses"].values())[0]
+            ):
                 paired_calls = {}
                 for req, data in kwargs["requests"].items():
                     name = ""
@@ -76,7 +82,13 @@ def fail_json(*args, **kwargs):
         verbosity = int(os.environ.get("ANSIBLE_VERBOSITY", "0"))
         if verbosity >= 1:
             kwargs["time"] = datetime.now().isoformat(timespec="microseconds")
-            if verbosity >= 3 and "requests" in kwargs and "responses" in kwargs:
+            if (
+                verbosity >= 3
+                and "requests" in kwargs
+                and "responses" in kwargs
+                and "name" in list(kwargs["requests"].values())[0]
+                and "name" in list(kwargs["responses"].values())[0]
+            ):
                 paired_calls = {}
                 for req, data in kwargs["requests"].items():
                     name = ""
