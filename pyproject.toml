@@ -34,13 +34,15 @@ testpaths = ["tests"]
 test = ["molecule>=25.3.1", "pytest-ansible>=25.1.0", "pytest-xdist>=3.6.1"]
 
 [tool.tox.env_run_base]
-commands_pre = [["./setup-tests.sh"]]
-pass_env = ["ANSIBLE_VERBOSITY", "LOG_DIR"]
 allowlist_externals = [
     "bash",
     "podman",
     "docker",
     "fish",
+    "./setup-tests.sh",
+    "./setup-tests.fish",
     "setup-tests.sh",
     "setup-tests.fish",
 ]
+commands_pre = [["./setup-tests.sh"]]
+pass_env = ["ANSIBLE_VERBOSITY", "LOG_DIR"]
