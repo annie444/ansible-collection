@@ -3,7 +3,6 @@ from ansible.errors import (
     AnsibleOptionsError,
     AnsibleModuleError,
     AnsibleAuthenticationFailure,
-    AnsibleRequiredOptionError,
 )
 
 
@@ -19,7 +18,7 @@ class KanidmArgsException(AnsibleOptionsError):
         return f"Kanidm argument error: {self._message}"
 
 
-class KanidmRequiredOptionError(AnsibleRequiredOptionError):
+class KanidmRequiredOptionError(AnsibleOptionsError):
     @property
     def message(self):
         return f"Kanidm required argument error: {self._message}"
