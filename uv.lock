@@ -49,6 +49,8 @@ test = [
     { name = "molecule" },
     { name = "pytest-ansible" },
     { name = "pytest-xdist" },
+    { name = "requests" },
+    { name = "requests-toolbelt" },
     { name = "tox-uv" },
 ]
 
@@ -69,6 +71,8 @@ test = [
     { name = "molecule", specifier = ">=25.3.1" },
     { name = "pytest-ansible", specifier = ">=25.1.0" },
     { name = "pytest-xdist", specifier = ">=3.6.1" },
+    { name = "requests", specifier = ">=2.32" },
+    { name = "requests-toolbelt", specifier = ">=1" },
     { name = "tox-uv", specifier = ">=1.25.0" },
 ]
 
