@@ -70,7 +70,8 @@ jobs:
         if: ${{ matrix.entry.python >= 3.12 }}
 
       - name: Setup sidecar container
-        run: ./setup-tests.sh
+        run: >-
+          ./setup-tests.sh && sleep 10
 
       - name: Run tox unit tests
         run: >-
