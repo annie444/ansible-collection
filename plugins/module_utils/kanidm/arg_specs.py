@@ -1,10 +1,10 @@
 from __future__ import absolute_import, annotations, division, print_function
 
 from dataclasses import dataclass
-import yaml
+import traceback
 import tempfile
-import requests
 from pathlib import Path
+
 from ansible.module_utils.compat.typing import FrozenSet, Optional, List
 
 from ..ansible_specs import (
@@ -20,10 +20,40 @@ from .exceptions import (
     KanidmRequiredOptionError,
 )
 
+STR_ENUM_IMP_ERR = None
 try:
     from enum import StrEnum
+
+    HAS_ENUM = True
 except ImportError:
-    from strenum import StrEnum
+    try:
+        from strenum import StrEnum
+
+        HAS_ENUM = True
+    except ImportError:
+        STR_ENUM_IMP_ERR = traceback.format_exc()
+        HAS_ENUM = False
+        StrEnum = object
+
+
+YAML_IMP_ERR = None
+try:
+    import yaml
+
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
+    YAML_IMP_ERR = traceback.format_exc()
+
+
+REQUESTS_IMP_ERR = None
+try:
+    import requests
+
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+    REQUESTS_IMP_ERR = traceback.format_exc()
 
 
 class Scope(StrEnum):  # type: ignore
@@ -160,50 +190,50 @@ class KanidmConf:
     def arg_spec() -> AnsibleArgumentSpec:
         return {
             "uri": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "required": True,
                 "aliases": ["kanidm_uri"],
                 "documentation": "The URI of the Kanidm server.",
             },
             "token": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "required": False,
                 "no_log": True,
                 "aliases": ["kanidm_token"],
                 "documentation": "The token for authentication.",
             },
             "ca_path": {
-                "type": OptionType.PATH,
+                "type": OptionType("path"),
                 "required": False,
                 "aliases": ["kanidm_ca_path"],
                 "documentation": "The path to the CA certificate.",
             },
             "username": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "required": False,
                 "no_log": True,
                 "aliases": ["kanidm_username"],
             },
             "password": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "required": False,
                 "no_log": True,
                 "aliases": ["kanidm_password"],
             },
             "ca_cert_data": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "required": False,
                 "no_log": True,
                 "documentation": "The CA certificate data as a base64 encoded string.",
             },
             "verify_ca": {
-                "type": OptionType.BOOL,
+                "type": OptionType("bool"),
                 "required": False,
                 "default": True,
                 "documentation": "Whether to verify the Kanidm server's certificate chain.",
             },
             "connect_timeout": {
-                "type": OptionType.INT,
+                "type": OptionType("int"),
                 "required": False,
                 "default": 30,
                 "documentation": "The connection timeout in seconds.",
@@ -260,14 +290,14 @@ class SupScope:
     def arg_spec() -> AnsibleArgumentSpec:
         return {
             "group": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "required": True,
                 "aliases": ["sup_scope_group"],
                 "documentation": "The group to which the additional scopes apply.",
             },
             "scopes": {
-                "type": OptionType.LIST,
-                "elements": OptionType.STR,
+                "type": OptionType("list"),
+                "elements": OptionType("str"),
                 "choices": [e.value for e in Scope],
                 "required": True,
                 "documentation": "The additional scopes for the group.",
@@ -328,20 +358,20 @@ class CustomClaim:
     def arg_spec() -> AnsibleArgumentSpec:
         return {
             "name": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "required": True,
                 "aliases": ["claim_name"],
                 "documentation": "The name of the custom claim.",
             },
             "group": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "required": True,
                 "aliases": ["claim_group"],
                 "documentation": "The group to which the custom claim applies.",
             },
             "values": {
-                "type": OptionType.LIST,
-                "elements": OptionType.STR,
+                "type": OptionType("list"),
+                "elements": OptionType("str"),
                 "required": True,
                 "documentation": "The values for the custom claim.",
             },
@@ -361,7 +391,7 @@ class CustomClaim:
 @dataclass
 class Image:
     src: str
-    format: ImageFormat = ImageFormat.auto
+    format: ImageFormat = ImageFormat("auto")
 
     def __init__(self, **kwargs):
         try:
@@ -392,13 +422,13 @@ class Image:
     def arg_spec() -> AnsibleArgumentSpec:
         return {
             "src": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "required": True,
                 "aliases": ["image_src"],
                 "documentation": "The source URL of the image.",
             },
             "format": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "choices": [e.value for e in ImageFormat],
                 "default": ImageFormat.auto,
                 "required": False,
@@ -551,12 +581,12 @@ class KanidmOauthArgs:
     display_name: Optional[str] = None
     group: str = "idm_all_persons"
     public: bool = False
-    claim_join: ClaimJoin = ClaimJoin.array
+    claim_join: ClaimJoin = ClaimJoin("array")
     pkce: bool = True
     legacy_crypto: bool = False
     strict_redirect: bool = True
     local_redirect: bool = False
-    username: PrefUsername = PrefUsername.spn
+    username: PrefUsername = PrefUsername("spn")
     sup_scopes: Optional[List[SupScope]] = None
     custom_claims: Optional[List[CustomClaim]] = None
     image: Optional[Image] = None
@@ -728,118 +758,118 @@ class KanidmOauthArgs:
         image = Image.arg_spec()
         return {
             "name": {
-                "type": OptionType.STR,
+                "type": OptionType("STR"),
                 "required": True,
                 "aliases": ["client_name"],
                 "documentation": "The name of the OAuth client.",
             },
             "url": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "required": True,
                 "aliases": ["client_url"],
                 "documentation": "The URL of the OAuth client's landing page.",
             },
             "redirect_url": {
-                "type": OptionType.LIST,
-                "elements": OptionType.STR,
+                "type": OptionType("list"),
+                "elements": OptionType("str"),
                 "required": True,
                 "aliases": ["redirect_urls"],
                 "documentation": "The redirect URLs for the OAuth client.",
             },
             "scopes": {
-                "type": OptionType.LIST,
-                "elements": OptionType.STR,
+                "type": OptionType("list"),
+                "elements": OptionType("str"),
                 "choices": [e.value for e in Scope],
                 "required": True,
                 "aliases": ["scope"],
                 "documentation": "The scopes requested by the OAuth client.",
             },
             "kanidm": {
-                "type": OptionType.DICT,
+                "type": OptionType("dict"),
                 "options": kanidm,
                 "required": True,
                 "documentation": "Configuration for the Kanidm client.",
             },
             "display_name": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "required": False,
                 "aliases": ["client_display_name"],
                 "default": "{{ name }}",
                 "documentation": "The display name of the OAuth client.",
             },
             "group": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "default": "idm_all_persons",
                 "required": False,
                 "documentation": "The group associated with the OAuth client. Defaults to all persons.",
             },
             "public": {
-                "type": OptionType.BOOL,
+                "type": OptionType("bool"),
                 "default": False,
                 "required": False,
                 "documentation": "Indicates if the client is public.",
             },
             "claim_join": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "choices": [e.value for e in ClaimJoin],
-                "default": ClaimJoin.array,
+                "default": ClaimJoin("array"),
                 "required": False,
                 "documentation": "How to join claims in the response. Defaults to array.",
             },
             "pkce": {
-                "type": OptionType.BOOL,
+                "type": OptionType("bool"),
                 "default": True,
                 "required": False,
                 "documentation": "Indicates if PKCE is enabled.",
             },
             "legacy_crypto": {
-                "type": OptionType.BOOL,
+                "type": OptionType("bool"),
                 "default": False,
                 "required": False,
                 "documentation": "Indicates if legacy cryptography is used.",
             },
             "strict_redirect": {
-                "type": OptionType.BOOL,
+                "type": OptionType("bool"),
                 "default": True,
                 "required": False,
                 "documentation": "Indicates if strict redirect validation is enabled.",
             },
             "local_redirect": {
-                "type": OptionType.BOOL,
+                "type": OptionType("bool"),
                 "default": False,
                 "required": False,
                 "documentation": "Indicates if local redirects are allowed.",
             },
             "sup_scopes": {
-                "type": OptionType.LIST,
-                "elements": OptionType.DICT,
+                "type": OptionType("list"),
+                "elements": OptionType("dict"),
                 "options": sup_scopes,
                 "required": False,
                 "documentation": "Additional scopes for specific groups.",
             },
             "username": {
-                "type": OptionType.STR,
+                "type": OptionType("str"),
                 "choices": [e.value for e in PrefUsername],
-                "default": PrefUsername.spn,
+                "default": PrefUsername("spn"),
                 "required": False,
                 "documentation": "Preferred username format. Defaults to SPN which takes the format of '<username>@<kanidm.uri>'.",
             },
             "custom_claims": {
-                "type": OptionType.LIST,
-                "elements": OptionType.DICT,
+                "type": OptionType("list"),
+                "elements": OptionType("dict"),
                 "options": custom_claims,
                 "required": False,
                 "documentation": "Custom claims to be included in the OAuth response.",
             },
             "image": {
-                "type": OptionType.DICT,
+                "type": OptionType("dict"),
                 "options": image,
                 "required": False,
                 "aliases": ["logo"],
                 "documentation": "Image configuration for the OAuth client.",
             },
             "debug": {
-                "type": OptionType.BOOL,
+                "type": OptionType("bool"),
                 "default": False,
                 "required": False,
                 "documentation": "Enable debug mode.",

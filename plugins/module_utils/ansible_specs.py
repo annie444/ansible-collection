@@ -9,11 +9,22 @@ from ansible.module_utils.compat.typing import (
     NotRequired,
     Union,
 )
+import traceback
 
+STR_ENUM_IMP_ERR = None
 try:
     from enum import StrEnum
+
+    HAS_ENUM = True
 except ImportError:
-    from strenum import StrEnum
+    try:
+        from strenum import StrEnum
+
+        HAS_ENUM = True
+    except ImportError:
+        STR_ENUM_IMP_ERR = traceback.format_exc()
+        HAS_ENUM = False
+        StrEnum = object
 
 
 class OptionType(StrEnum):  # type: ignore

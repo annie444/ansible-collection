@@ -1,6 +1,5 @@
 from __future__ import absolute_import, annotations, division, print_function
 
-from requests import Response, PreparedRequest, Request
 from .arg_specs import (
     KanidmOauthArgs,
     PrefUsername,
@@ -11,10 +10,8 @@ from .exceptions import (
     KanidmRequiredOptionError,
     KanidmArgsException,
 )
-from requests.sessions import Session
-from requests.auth import AuthBase
-from requests_toolbelt.multipart.encoder import MultipartEncoder, FileWrapper
 import json
+import traceback
 from ansible.module_utils.compat.typing import (
     Callable,
     Optional,
@@ -26,6 +23,27 @@ from ansible.module_utils.compat.typing import (
     TypedDict,
     Iterable,
 )
+
+
+REQUESTS_IMP_ERR = None
+try:
+    from requests.sessions import Session
+    from requests.auth import AuthBase
+    from requests import Response, PreparedRequest, Request
+
+    HAS_REQUESTS = True
+except ImportError:
+    REQUESTS_IMP_ERR = traceback.format_exc()
+    HAS_REQUESTS = False
+
+REQUESTS_TOOLS_IMP_ERR = None
+try:
+    from requests_toolbelt.multipart.encoder import MultipartEncoder, FileWrapper
+
+    HAS_REQUESTS_TOOLS = True
+except ImportError:
+    REQUESTS_TOOLS_IMP_ERR = traceback.format_exc()
+    HAS_REQUESTS_TOOLS = False
 
 
 class BearerAuth(AuthBase):

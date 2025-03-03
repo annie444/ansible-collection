@@ -77,11 +77,22 @@ responses:
 """
 
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
+from ansible.module_utils.basic import missing_required_lib  # pylint: disable=E0401  # noqa: E402
 from ..module_utils.kanidm.arg_specs import (  # pylint: disable=E0401  # noqa: E402
     KanidmOauthArgs,
+    HAS_REQUESTS as ARGS_HAS_REQ,
+    REQUESTS_IMP_ERR as ARGS_REQ_IMP_ERR,
+    HAS_YAML,
+    YAML_IMP_ERR,
+    HAS_ENUM,
+    STR_ENUM_IMP_ERR,
 )
 from ..module_utils.kanidm.runner import (  # pylint: disable=E0401  # noqa: E402
     Kanidm,
+    HAS_REQUESTS as RUN_HAS_REQ,
+    REQUESTS_IMP_ERR as RUN_REQ_IMP_ERR,
+    HAS_REQUESTS_TOOLS,
+    REQUESTS_TOOLS_IMP_ERR,
 )
 from ..module_utils.kanidm.exceptions import (  # pylint: disable=E0401  # noqa: E402
     KanidmApiError,
@@ -110,6 +121,21 @@ def run_module():
         supports_check_mode=True,
         **KanidmOauthArgs.full_arg_spec(),
     )
+
+    if not ARGS_HAS_REQ:
+        module.fail_json(msg=missing_required_lib(ARGS_REQ_IMP_ERR), **result)
+
+    if not RUN_HAS_REQ:
+        module.fail_json(msg=missing_required_lib(RUN_REQ_IMP_ERR), **result)
+
+    if not HAS_REQUESTS_TOOLS:
+        module.fail_json(msg=missing_required_lib(REQUESTS_TOOLS_IMP_ERR), **result)
+
+    if not HAS_YAML:
+        module.fail_json(msg=missing_required_lib(YAML_IMP_ERR), **result)
+
+    if not HAS_ENUM:
+        module.fail_json(msg=missing_required_lib(STR_ENUM_IMP_ERR), **result)
 
     try:
         args: KanidmOauthArgs = KanidmOauthArgs(**module.params)
