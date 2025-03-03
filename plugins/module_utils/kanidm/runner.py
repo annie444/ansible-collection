@@ -22,6 +22,7 @@ from ansible.module_utils.compat.typing import (
     Tuple,
     TypedDict,
     Iterable,
+    cast,
 )
 
 
@@ -35,6 +36,8 @@ try:
 except ImportError:
     REQUESTS_IMP_ERR = traceback.format_exc()
     HAS_REQUESTS = False
+    AuthBase = object
+    Session = cast(Callable, object)
 
 REQUESTS_TOOLS_IMP_ERR = None
 try:
