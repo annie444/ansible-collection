@@ -221,15 +221,27 @@ class Kanidm(object):
                     raise KanidmModuleError(
                         f"Unable to create or get public client {self.args.name}. Got {self.error}"
                     )
-                if not self.set_localhost_redirect():
-                    raise KanidmModuleError(
-                        f"Unable to set localhost redirect policy for client {self.args.name}. Got {self.error}"
-                    )
 
         if not self.get_client():
             raise KanidmModuleError(
                 f"Unable to get client {self.args.name}. Got {self.error}"
             )
+
+        if not self.args.public:
+            if not self.set_pkce():
+                raise KanidmModuleError(
+                    f"Unable to set PKCE for client {self.args.name}. Got {self.error}"
+                )
+
+            if not self.set_legacy_crypto():
+                raise KanidmModuleError(
+                    f"Unable to set legacy crypto for client {self.args.name}. Got {self.error}"
+                )
+        else:
+            if not self.set_localhost_redirect():
+                raise KanidmModuleError(
+                    f"Unable to set localhost redirect policy for client {self.args.name}. Got {self.error}"
+                )
 
         if not self.add_redirect_urls():
             raise KanidmModuleError(
@@ -239,16 +251,6 @@ class Kanidm(object):
         if not self.update_scope_map():
             raise KanidmModuleError(
                 f"Unable to update scope map for client {self.args.name}. Got {self.error}"
-            )
-
-        if not self.set_pkce():
-            raise KanidmModuleError(
-                f"Unable to set PKCE for client {self.args.name}. Got {self.error}"
-            )
-
-        if not self.set_legacy_crypto():
-            raise KanidmModuleError(
-                f"Unable to set legacy crypto for client {self.args.name}. Got {self.error}"
             )
 
         if not self.set_preferred_username():
