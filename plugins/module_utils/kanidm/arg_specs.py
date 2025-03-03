@@ -282,13 +282,17 @@ class KanidmConf:
 
     @staticmethod
     def documentation(indentation: Optional[int] = None) -> str:
+        yaml.SafeDumper.add_multi_representer(
+            StrEnum,
+            yaml.representer.SafeRepresenter.represent_str,  # type: ignore
+        )
         if indentation is not None:
-            out: str = yaml.dump(KanidmConf.arg_spec(), sort_keys=False)
+            out: str = yaml.safe_dump(KanidmConf.arg_spec(), sort_keys=False)
             values = []
             for line in out.splitlines():
                 values.append(f"{' ' * indentation}{line}")
             return "\n".join(values)
-        return yaml.dump(KanidmConf.arg_spec(), sort_keys=False)
+        return yaml.safe_dump(KanidmConf.arg_spec(), sort_keys=False)
 
 
 @dataclass
@@ -346,13 +350,17 @@ class SupScope:
 
     @staticmethod
     def documentation(indentation: Optional[int] = None) -> str:
+        yaml.SafeDumper.add_multi_representer(
+            StrEnum,
+            yaml.representer.SafeRepresenter.represent_str,  # type: ignore
+        )
         if indentation is not None:
-            out: str = yaml.dump(SupScope.arg_spec(), sort_keys=False)
+            out: str = yaml.safe_dump(SupScope.arg_spec(), sort_keys=False)
             values = []
             for line in out.splitlines():
                 values.append(f"{' ' * indentation}{line}")
             return "\n".join(values)
-        return yaml.dump(SupScope.arg_spec(), sort_keys=False)
+        return yaml.safe_dump(SupScope.arg_spec(), sort_keys=False)
 
 
 @dataclass
@@ -419,13 +427,17 @@ class CustomClaim:
 
     @staticmethod
     def documentation(indentation: Optional[int] = None) -> str:
+        yaml.SafeDumper.add_multi_representer(
+            StrEnum,
+            yaml.representer.SafeRepresenter.represent_str,  # type: ignore
+        )
         if indentation is not None:
-            out: str = yaml.dump(CustomClaim.arg_spec(), sort_keys=False)
+            out: str = yaml.safe_dump(CustomClaim.arg_spec(), sort_keys=False)
             values = []
             for line in out.splitlines():
                 values.append(f"{' ' * indentation}{line}")
             return "\n".join(values)
-        return yaml.dump(CustomClaim.arg_spec(), sort_keys=False)
+        return yaml.safe_dump(CustomClaim.arg_spec(), sort_keys=False)
 
 
 @dataclass
@@ -478,13 +490,17 @@ class Image:
 
     @staticmethod
     def documentation(indentation: Optional[int] = None) -> str:
+        yaml.SafeDumper.add_multi_representer(
+            StrEnum,
+            yaml.representer.SafeRepresenter.represent_str,  # type: ignore
+        )
         if indentation is not None:
-            out: str = yaml.dump(Image.arg_spec(), sort_keys=False)
+            out: str = yaml.safe_dump(Image.arg_spec(), sort_keys=False)
             values = []
             for line in out.splitlines():
                 values.append(f"{' ' * indentation}{line}")
             return "\n".join(values)
-        return yaml.dump(Image.arg_spec(), sort_keys=False)
+        return yaml.safe_dump(Image.arg_spec(), sort_keys=False)
 
     def get(self) -> Path:
         src = self.src
@@ -941,10 +957,14 @@ class KanidmOauthArgs:
 
     @classmethod
     def documentation(cls, indentation: Optional[int] = None) -> str:
+        yaml.SafeDumper.add_multi_representer(
+            StrEnum,
+            yaml.representer.SafeRepresenter.represent_str,  # type: ignore
+        )
         if indentation is not None:
-            out: str = yaml.dump(cls.arg_spec(), sort_keys=False)
+            out: str = yaml.safe_dump(cls.arg_spec(), sort_keys=False)
             values = []
             for line in out.splitlines():
                 values.append(f"{' ' * indentation}{line}")
             return "\n".join(values)
-        return yaml.dump(cls.arg_spec(), sort_keys=False)
+        return yaml.safe_dump(cls.arg_spec(), sort_keys=False)
