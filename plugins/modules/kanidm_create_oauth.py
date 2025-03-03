@@ -22,8 +22,10 @@ requirements:
     - "requests>=2.32"
     - "requests-toolbelt>=1"
 author: Annie Ehler (@annie444)
-options:
-""" + KanidmOauthArgs.documentation(indentation=2)
+
+extends_documentation_fragment:
+    - kanidm_create_oauth
+"""
 
 EXAMPLES = r"""
 # Pass in a message
