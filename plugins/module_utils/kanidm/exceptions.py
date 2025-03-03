@@ -5,6 +5,11 @@ from ansible.errors import (
     AnsibleAuthenticationFailure,
 )
 
+try:
+    from ansible.errors import AnsibleRequiredOptionError
+except ImportError:
+    from ansible.errors import AnsibleOptionsError as AnsibleRequiredOptionError
+
 
 class KanidmException(AnsibleError):
     @property
@@ -18,7 +23,7 @@ class KanidmArgsException(AnsibleOptionsError):
         return f"Kanidm argument error: {self._message}"
 
 
-class KanidmRequiredOptionError(AnsibleOptionsError):
+class KanidmRequiredOptionError(AnsibleRequiredOptionError):
     @property
     def message(self):
         return f"Kanidm required argument error: {self._message}"

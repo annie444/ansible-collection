@@ -1,20 +1,137 @@
 from typing import Callable, TypedDict, List, Dict, Tuple, TypeVar, NotRequired
-from enum import StrEnum
 
+try:
+    from enum import StrEnum
 
-class OptionType(StrEnum):
-    STR = "str"
-    INT = "int"
-    FLOAT = "float"
-    BOOL = "bool"
-    DICT = "dict"
-    LIST = "list"
-    PATH = "path"
-    RAW = "raw"
-    JSONARG = "jsonarg"
-    JSON = "json"
-    BYTES = "bytes"
-    BITS = "bits"
+    class OptionType(StrEnum):  # type: ignore
+        STR = "str"
+        INT = "int"
+        FLOAT = "float"
+        BOOL = "bool"
+        DICT = "dict"
+        LIST = "list"
+        PATH = "path"
+        RAW = "raw"
+        JSONARG = "jsonarg"
+        JSON = "json"
+        BYTES = "bytes"
+        BITS = "bits"
+
+    class AnsiblePluginTypes(StrEnum):  # type: ignore
+        LOOKUP = "lookup"
+        ACTION = "action"
+        BECOME = "become"
+        CACHE = "cache"
+        CALLBACK = "callback"
+        CLI_CONF = "cliconf"
+        CONNECTION = "connection"
+        DOCS = "docs"
+        FILTER = "filter"
+        HTTPAPI = "httpapi"
+        INVENTORY = "inventory"
+        MODULE = "module"
+        MODULE_UTILS = "module_utils"
+        NETCONF = "netconf"
+        SHELL = "shell"
+        STRATEGY = "strategy"
+        TERMINAL = "terminal"
+        TEST = "test"
+        VAR = "var"
+
+    class AnsibleModuleSupport(StrEnum):  # type: ignore
+        FULL = "full"
+        NONE = "none"
+        PARTIAL = "partial"
+        NA = "N/A"
+
+except ImportError:
+    try:
+        from enum import Enum
+
+        class OptionType(str, Enum):  # type: ignore
+            STR = "str"
+            INT = "int"
+            FLOAT = "float"
+            BOOL = "bool"
+            DICT = "dict"
+            LIST = "list"
+            PATH = "path"
+            RAW = "raw"
+            JSONARG = "jsonarg"
+            JSON = "json"
+            BYTES = "bytes"
+            BITS = "bits"
+
+        class AnsiblePluginTypes(str, Enum):  # type: ignore
+            LOOKUP = "lookup"
+            ACTION = "action"
+            BECOME = "become"
+            CACHE = "cache"
+            CALLBACK = "callback"
+            CLI_CONF = "cliconf"
+            CONNECTION = "connection"
+            DOCS = "docs"
+            FILTER = "filter"
+            HTTPAPI = "httpapi"
+            INVENTORY = "inventory"
+            MODULE = "module"
+            MODULE_UTILS = "module_utils"
+            NETCONF = "netconf"
+            SHELL = "shell"
+            STRATEGY = "strategy"
+            TERMINAL = "terminal"
+            TEST = "test"
+            VAR = "var"
+
+        class AnsibleModuleSupport(str, Enum):  # type: ignore
+            FULL = "full"
+            NONE = "none"
+            PARTIAL = "partial"
+            NA = "N/A"
+
+    except ImportError:
+        from strenum import StrEnum
+
+        class OptionType(StrEnum):
+            STR = "str"
+            INT = "int"
+            FLOAT = "float"
+            BOOL = "bool"
+            DICT = "dict"
+            LIST = "list"
+            PATH = "path"
+            RAW = "raw"
+            JSONARG = "jsonarg"
+            JSON = "json"
+            BYTES = "bytes"
+            BITS = "bits"
+
+        class AnsiblePluginTypes(StrEnum):
+            LOOKUP = "lookup"
+            ACTION = "action"
+            BECOME = "become"
+            CACHE = "cache"
+            CALLBACK = "callback"
+            CLI_CONF = "cliconf"
+            CONNECTION = "connection"
+            DOCS = "docs"
+            FILTER = "filter"
+            HTTPAPI = "httpapi"
+            INVENTORY = "inventory"
+            MODULE = "module"
+            MODULE_UTILS = "module_utils"
+            NETCONF = "netconf"
+            SHELL = "shell"
+            STRATEGY = "strategy"
+            TERMINAL = "terminal"
+            TEST = "test"
+            VAR = "var"
+
+        class AnsibleModuleSupport(StrEnum):
+            FULL = "full"
+            NONE = "none"
+            PARTIAL = "partial"
+            NA = "N/A"
 
 
 T = TypeVar("T")
@@ -63,35 +180,6 @@ class AnsibleFullArgumentSpec(TypedDict):
         | Tuple[str | AnsibleSequence[str] | D | bool]
     ]
     required_by: NotRequired[Dict[str, str | AnsibleSequence[str]]]
-
-
-class AnsiblePluginTypes(StrEnum):
-    LOOKUP = "lookup"
-    ACTION = "action"
-    BECOME = "become"
-    CACHE = "cache"
-    CALLBACK = "callback"
-    CLI_CONF = "cliconf"
-    CONNECTION = "connection"
-    DOCS = "docs"
-    FILTER = "filter"
-    HTTPAPI = "httpapi"
-    INVENTORY = "inventory"
-    MODULE = "module"
-    MODULE_UTILS = "module_utils"
-    NETCONF = "netconf"
-    SHELL = "shell"
-    STRATEGY = "strategy"
-    TERMINAL = "terminal"
-    TEST = "test"
-    VAR = "var"
-
-
-class AnsibleModuleSupport(StrEnum):
-    FULL = "full"
-    NONE = "none"
-    PARTIAL = "partial"
-    NA = "N/A"
 
 
 class AnsibleSeeAlso(TypedDict):
