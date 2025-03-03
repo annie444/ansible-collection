@@ -6,10 +6,6 @@ from __future__ import absolute_import, annotations, division, print_function
 
 __metaclass__ = type  # pylint: disable=C0103
 
-from ..module_utils.kanidm.arg_specs import (
-    KanidmOauthArgs,
-)
-
 DOCUMENTATION = r"""
 ---
 module: kanidm_create_oauth
@@ -81,6 +77,9 @@ responses:
 """
 
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
+from ..module_utils.kanidm.arg_specs import (
+    KanidmOauthArgs,
+)
 from ..module_utils.kanidm.runner import (  # pylint: disable=E0401  # noqa: E402
     Kanidm,
 )

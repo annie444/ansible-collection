@@ -5,6 +5,7 @@ import yaml
 import tempfile
 import requests
 from pathlib import Path
+from ansible.module_utils.compat.typing import FrozenSet, Optional, List
 
 from ..ansible_specs import (
     AnsibleArgumentSpec,
@@ -18,22 +19,6 @@ from .exceptions import (
     KanidmModuleError,
     KanidmRequiredOptionError,
 )
-
-try:
-    from typing import FrozenSet
-except ImportError:
-    from typing_extensions import FrozenSet
-
-try:
-    from typing import Optional
-except ImportError:
-    from typing_extensions import Optional
-
-try:
-    from typing import List
-except ImportError:
-    from typing_extensions import List
-
 
 try:
     from enum import StrEnum

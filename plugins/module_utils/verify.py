@@ -9,11 +9,7 @@ import bz2
 import tarfile
 import zipfile
 import os
-
-try:
-    from typing import Any
-except ImportError:
-    from typing_extensions import Any
+from ansible.module_utils.compat.typing import Any
 
 from ansible.module_utils.common.validation import (
     check_type_bool,
@@ -26,12 +22,12 @@ from ansible.module_utils.common.validation import (
 
 def decode_file(content: bytes, header: list[bytes]) -> str:
     if header[0:2] == [b"\x1f", b"\x8b"]:
-        _, path = tempfile.mkstemp()
+        path = tempfile.mkstemp()[1]
         with open(path, "wb") as f:
             f.write(gzip.decompress(content))
         return str(path)
     elif header[0:2] == [b"\x1f", b"\xa0"]:
-        _, path = tempfile.mkstemp(suffix=".tar.z")
+        path = tempfile.mkstemp(suffix=".tar.z")[1]
         with open(path, "wb") as f:
             f.write(content)
         temp_path = tempfile.mkdtemp()
@@ -42,7 +38,7 @@ def decode_file(content: bytes, header: list[bytes]) -> str:
         path = f"{temp_path}/{members[0].name}"
         return str(path)
     elif header[0:3] == [b"\x42", b"\x5a", b"\x68"]:
-        _, path = tempfile.mkstemp()
+        path = tempfile.mkstemp()[1]
         with open(path, "wb") as f:
             f.write(bz2.decompress(content))
         return str(path)
@@ -52,7 +48,7 @@ def decode_file(content: bytes, header: list[bytes]) -> str:
         b"\x07",
         b"\x08",
     ]:
-        _, path = tempfile.mkstemp(suffix=".zip")
+        path = tempfile.mkstemp(suffix=".zip")[1]
         with open(path, "wb") as f:
             f.write(content)
         temp_path = tempfile.mkdtemp()
@@ -66,27 +62,27 @@ def decode_file(content: bytes, header: list[bytes]) -> str:
     elif header[0:4] == [b"\x50", b"\x4b", b"\x05", b"\x06"]:
         raise ValueError("Path is an empty zip file")
     elif header[0:3] == [b"\xef", b"\xbb", b"\xbf"]:
-        _, path = tempfile.mkstemp()
+        path = tempfile.mkstemp()[1]
         with open(path, "wb") as f:
             f.write(content)
         return str(path)
     elif header[0:2] == [b"\xff", b"\xfe"]:
-        _, path = tempfile.mkstemp()
+        path = tempfile.mkstemp()[1]
         with open(path, "w") as f:
             f.write(content.decode("utf-16-le"))
         return str(path)
     elif header[0:2] == [b"\xfe", b"\xff"]:
-        _, path = tempfile.mkstemp()
+        path = tempfile.mkstemp()[1]
         with open(path, "w") as f:
             f.write(content.decode("utf-16-be"))
         return str(path)
     elif header[0:4] == [b"\xff", b"\xfe", b"\x00", b"\x00"]:
-        _, path = tempfile.mkstemp()
+        path = tempfile.mkstemp()[1]
         with open(path, "w") as f:
             f.write(content.decode("utf-32-le"))
         return str(path)
     elif header[0:4] == [b"\x00", b"\x00", b"\xfe", b"\xff"]:
-        _, path = tempfile.mkstemp()
+        path = tempfile.mkstemp()[1]
         with open(path, "w") as f:
             f.write(content.decode("utf-32-be"))
         return str(path)
@@ -96,12 +92,12 @@ def decode_file(content: bytes, header: list[bytes]) -> str:
         or header[0:4] == [b"\x2b", b"\x2f", b"\x76", b"\x2b"]
         or header[0:4] == [b"\x2b", b"\x2f", b"\x76", b"\x2f"]
     ):
-        _, path = tempfile.mkstemp()
+        path = tempfile.mkstemp()[1]
         with open(path, "w") as f:
             f.write(content.decode("utf-7"))
         return str(path)
     elif header[0:2] == [b"\x1f", b"\x8b"]:
-        _, path = tempfile.mkstemp(suffix=".tar.gz")
+        path = tempfile.mkstemp(suffix=".tar.gz")[1]
         temp_path = tempfile.mkdtemp()
         with tarfile.open(path) as f:
             members = f.getmembers()
@@ -110,7 +106,7 @@ def decode_file(content: bytes, header: list[bytes]) -> str:
         path = f"{temp_path}/{members[0].name}"
         return str(path)
     elif header[0:6] == [b"\xfd", b"\x37", b"\x7a", b"\x58", b"\x5a", b"\x00"]:
-        _, path = tempfile.mkstemp(suffix=".tar.xz")
+        path = tempfile.mkstemp(suffix=".tar.xz")[1]
         temp_path = tempfile.mkdtemp()
         with tarfile.open(path) as f:
             members = f.getmembers()
@@ -128,7 +124,7 @@ def decode_file(content: bytes, header: list[bytes]) -> str:
         or header[0:2] == [b"\x78", b"\xbb"]
         or header[0:2] == [b"\x78", b"\xf9"]
     ):
-        _, path = tempfile.mkstemp()
+        path = tempfile.mkstemp()[1]
         with open(path, "wb") as f:
             f.write(zlib.decompress(content))
         return str(path)

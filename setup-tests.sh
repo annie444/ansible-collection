@@ -23,8 +23,10 @@ if command -v podman >/dev/null 2>&1; then
         podman volume create kanidm-test-vol
         sleep 1
         if [ "$(uname -s)" = "Darwin" ]; then
-            export PODMAN_VOL_PATH="$(pwd)/tests/data"
-            export PODMAN_MACHINE_NAME="$(podman machine inspect --format='{{.Name}}')"
+            PODMAN_VOL_PATH="$(pwd)/tests/data"
+            export PODMAN_VOL_PATH
+            PODMAN_MACHINE_NAME="$(podman machine inspect --format='{{.Name}}')"
+            export PODMAN_MACHINE_NAME
             podman machine ssh "${PODMAN_MACHINE_NAME}" sudo podman volume import kanidm-test-vol "${PODMAN_VOL_PATH}/kanidm-test-vol.tar"
         else
             podman volume import kanidm-test-vol ./tests/data/kanidm-test-vol.tar

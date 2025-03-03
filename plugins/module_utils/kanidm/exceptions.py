@@ -1,6 +1,6 @@
 from __future__ import absolute_import, annotations, division, print_function
 
-from ansible.errors import (
+from ansible.module_utils.errors import (
     AnsibleError,
     AnsibleOptionsError,
     AnsibleModuleError,
@@ -8,9 +8,11 @@ from ansible.errors import (
 )
 
 try:
-    from ansible.errors import AnsibleRequiredOptionError
+    from ansible.module_utils.errors import AnsibleRequiredOptionError
 except ImportError:
-    from ansible.errors import AnsibleOptionsError as AnsibleRequiredOptionError
+    from ansible.module_utils.errors import (
+        AnsibleOptionsError as AnsibleRequiredOptionError,
+    )
 
 
 class KanidmException(AnsibleError):

@@ -15,54 +15,17 @@ from requests.sessions import Session
 from requests.auth import AuthBase
 from requests_toolbelt.multipart.encoder import MultipartEncoder, FileWrapper
 import json
-
-try:
-    from typing import Callable
-except ImportError:
-    from typing_extensions import Callable
-
-try:
-    from typing import Optional
-except ImportError:
-    from typing_extensions import Optional
-
-try:
-    from typing import List
-except ImportError:
-    from typing_extensions import List
-
-try:
-    from typing import Dict
-except ImportError:
-    from typing_extensions import Dict
-
-try:
-    from typing import Any
-except ImportError:
-    from typing_extensions import Any
-
-try:
-    from typing import Set
-except ImportError:
-    from typing_extensions import Set
-
-try:
-    from typing import Tuple
-except ImportError:
-    from typing_extensions import Tuple
-
-try:
-    from typing import TypedDict
-except ImportError:
-    from typing_extensions import TypedDict
-
-try:
-    from typing import Iterable
-except ImportError:
-    try:
-        from collections.abc import Iterable
-    except ImportError:
-        from typing_extensions import Iterable
+from ansible.module_utils.compat.typing import (
+    Callable,
+    Optional,
+    Dict,
+    Any,
+    Set,
+    List,
+    Tuple,
+    TypedDict,
+    Iterable,
+)
 
 
 class BearerAuth(AuthBase):
