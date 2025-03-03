@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# pylint: disable=E0401,E402
+# pylint: disable=E0401,E0402
 
 from __future__ import absolute_import, annotations, division, print_function
 
@@ -77,7 +77,7 @@ responses:
 """
 
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
-from ..module_utils.kanidm.arg_specs import (
+from ..module_utils.kanidm.arg_specs import (  # pylint: disable=E0401  # noqa: E402
     KanidmOauthArgs,
 )
 from ..module_utils.kanidm.runner import (  # pylint: disable=E0401  # noqa: E402

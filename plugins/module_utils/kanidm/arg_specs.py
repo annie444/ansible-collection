@@ -437,7 +437,7 @@ class Image:
             or self.src.startswith("https://")
             or self.src.startswith("ftp://")
         ):
-            _, temp = tempfile.mkstemp(suffix=self.format.get())
+            temp = tempfile.mkstemp(suffix=self.format.get())[1]
             response = requests.get(self.src)
             if response.status_code == 200:
                 with open(temp, "wb") as f:
