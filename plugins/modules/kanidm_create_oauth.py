@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, annotations, division, print_function
 
+
 __metaclass__ = type  # pylint: disable=C0103
 
 DOCUMENTATION = r"""
@@ -78,21 +79,21 @@ responses:
 
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
 from ansible.module_utils.basic import missing_required_lib  # pylint: disable=E0401  # noqa: E402
-from ..module_utils.kanidm.arg_specs import (  # pylint: disable=E0401  # noqa: E402
-    KanidmOauthArgs,
-    HAS_REQUESTS as ARGS_HAS_REQ,
-    REQUESTS_IMP_ERR as ARGS_REQ_IMP_ERR,
-    HAS_YAML,
-    YAML_IMP_ERR,
+
+from ..module_utils.kanidm.arg_specs import (
     HAS_ENUM,
-    STR_ENUM_IMP_ERR,
 )
-from ..module_utils.kanidm.runner import (  # pylint: disable=E0401  # noqa: E402
-    Kanidm,
-    HAS_REQUESTS as RUN_HAS_REQ,
-    REQUESTS_IMP_ERR as RUN_REQ_IMP_ERR,
-    HAS_REQUESTS_TOOLS,
-    REQUESTS_TOOLS_IMP_ERR,
+from ..module_utils.kanidm.arg_specs import (  # pylint: disable=E0401  # noqa: E402
+    HAS_REQUESTS as ARGS_HAS_REQ,
+)
+from ..module_utils.kanidm.arg_specs import (
+    HAS_YAML,
+)
+from ..module_utils.kanidm.arg_specs import REQUESTS_IMP_ERR as ARGS_REQ_IMP_ERR
+from ..module_utils.kanidm.arg_specs import (
+    STR_ENUM_IMP_ERR,
+    YAML_IMP_ERR,
+    KanidmOauthArgs,
 )
 from ..module_utils.kanidm.exceptions import (  # pylint: disable=E0401  # noqa: E402
     KanidmApiError,
@@ -102,6 +103,17 @@ from ..module_utils.kanidm.exceptions import (  # pylint: disable=E0401  # noqa:
     KanidmModuleError,
     KanidmRequiredOptionError,
     KanidmUnexpectedError,
+)
+from ..module_utils.kanidm.runner import (  # pylint: disable=E0401  # noqa: E402
+    HAS_REQUESTS as RUN_HAS_REQ,
+)
+from ..module_utils.kanidm.runner import (
+    HAS_REQUESTS_TOOLS,
+)
+from ..module_utils.kanidm.runner import REQUESTS_IMP_ERR as RUN_REQ_IMP_ERR
+from ..module_utils.kanidm.runner import (
+    REQUESTS_TOOLS_IMP_ERR,
+    Kanidm,
 )
 
 
