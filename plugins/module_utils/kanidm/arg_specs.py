@@ -758,7 +758,7 @@ class KanidmOauthArgs:
         image = Image.arg_spec()
         return {
             "name": {
-                "type": OptionType("STR"),
+                "type": OptionType("str"),
                 "required": True,
                 "aliases": ["client_name"],
                 "documentation": "The name of the OAuth client.",
