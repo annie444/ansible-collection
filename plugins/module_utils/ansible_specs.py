@@ -41,6 +41,16 @@ class OptionType(StrEnum):  # type: ignore
     BYTES = "bytes"
     BITS = "bits"
 
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
+    @classmethod
+    def documentation(cls) -> str:
+        return str(cls)
+
 
 class AnsiblePluginTypes(StrEnum):  # type: ignore
     LOOKUP = "lookup"
@@ -63,12 +73,32 @@ class AnsiblePluginTypes(StrEnum):  # type: ignore
     TEST = "test"
     VAR = "var"
 
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
+    @classmethod
+    def documentation(cls) -> str:
+        return str(cls)
+
 
 class AnsibleModuleSupport(StrEnum):  # type: ignore
     FULL = "full"
     NONE = "none"
     PARTIAL = "partial"
     NA = "N/A"
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
+    @classmethod
+    def documentation(cls) -> str:
+        return str(cls)
 
 
 T = TypeVar("T")

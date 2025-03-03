@@ -65,6 +65,16 @@ class Scope(StrEnum):  # type: ignore
     groups = "groups"
     ssh_publickeys = "ssh_publickeys"
 
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
+    @classmethod
+    def documentation(cls) -> str:
+        return str(cls)
+
 
 class ImageFormat(StrEnum):  # type: ignore
     png = "png"
@@ -73,6 +83,16 @@ class ImageFormat(StrEnum):  # type: ignore
     svg = "svg"
     webp = "webp"
     auto = "auto"
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
+    @classmethod
+    def documentation(cls) -> str:
+        return str(cls)
 
     def get(self) -> str:
         if self == ImageFormat.auto:
@@ -99,10 +119,30 @@ class ClaimJoin(StrEnum):  # type: ignore
     csv = "csv"
     ssv = "ssv"
 
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
+    @classmethod
+    def documentation(cls) -> str:
+        return str(cls)
+
 
 class PrefUsername(StrEnum):  # type: ignore
     spn = "spn"
     short = "short"
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
+    @classmethod
+    def documentation(cls) -> str:
+        return str(cls)
 
 
 @dataclass
