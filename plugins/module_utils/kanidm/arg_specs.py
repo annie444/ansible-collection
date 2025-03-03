@@ -8,6 +8,7 @@ from pathlib import Path
 
 from ..ansible_specs import (
     AnsibleArgumentSpec,
+    AnsibleFullArgumentSpec,
     OptionType,
 )
 from ..verify import Verify
@@ -119,6 +120,20 @@ class KanidmConf:
             raise KanidmArgsException(str(e), e)
         except Exception as e:
             raise e
+
+    @staticmethod
+    def full_arg_spec() -> AnsibleFullArgumentSpec:
+        return {
+            "argument_spec": KanidmConf.arg_spec(),
+            "mutually_exclusive": [
+                ["token", "username"],
+                ["token", "password"],
+                ["ca_path", "ca_cert_data"],
+            ],
+            "required_together": [
+                ("username", "password"),
+            ],
+        }
 
     @staticmethod
     def valid_args() -> FrozenSet[str]:
@@ -658,6 +673,19 @@ class KanidmOauthArgs:
         except Exception as e:
             raise e
 
+        if self.public and not self.pkce:
+            raise KanidmArgsException("Public clients must use PKCE")
+
+        if not self.public and self.local_redirect:
+            raise KanidmArgsException(
+                "Local redirects are only allowed for public clients"
+            )
+
+        if self.local_redirect and not self.strict_redirect:
+            raise KanidmArgsException(
+                "Local redirects require strict redirect validation"
+            )
+
     @staticmethod
     def valid_args() -> FrozenSet[str]:
         kanidm = [f"kanidm.{k}" for k in KanidmConf.valid_args()]
@@ -810,6 +838,29 @@ class KanidmOauthArgs:
                 "required": False,
                 "documentation": "Enable debug mode.",
             },
+        }
+
+    @staticmethod
+    def full_arg_spec() -> AnsibleFullArgumentSpec:
+        kanidm_full_spec = KanidmConf.full_arg_spec()
+        mutually_exclusive = []
+        required_together = []
+
+        if "mutually_exclusive" in kanidm_full_spec:
+            for values in enumerate(kanidm_full_spec["mutually_exclusive"]):
+                mutually_exclusive.append([])
+                for item in values:
+                    mutually_exclusive[-1].append(f"kanidm.{item}")
+        if "required_together" in kanidm_full_spec:
+            for values in enumerate(kanidm_full_spec["required_together"]):
+                required_together.append([])
+                for item in values:
+                    required_together[-1].append(f"kanidm.{item}")
+
+        return {
+            "argument_spec": KanidmOauthArgs.arg_spec(),
+            "mutually_exclusive": mutually_exclusive,
+            "required_together": required_together,
         }
 
     @classmethod

@@ -21,7 +21,7 @@ T = TypeVar("T")
 D = TypeVar("D")
 
 S = TypeVar("S")
-AnsibleSequence = List[S] | Tuple[S]
+AnsibleSequence = List[S] | Tuple[S, ...]
 
 
 class AnsibleDeprecatedAlias(TypedDict):
@@ -47,6 +47,14 @@ class AnsibleOption(TypedDict):
     deprecated_aliases: NotRequired[List[AnsibleDeprecatedAlias]]
     aliases: NotRequired[List[str]]
     description: NotRequired[str]
+    documentation: NotRequired[str | List[str]]
+
+
+AnsibleArgumentSpec = Dict[str, AnsibleOption]
+
+
+class AnsibleFullArgumentSpec(TypedDict):
+    argument_spec: AnsibleArgumentSpec
     mutually_exclusive: NotRequired[List[AnsibleSequence[str]]]
     required_together: NotRequired[List[AnsibleSequence[str]]]
     required_one_of: NotRequired[List[AnsibleSequence[str]]]
@@ -55,10 +63,6 @@ class AnsibleOption(TypedDict):
         | Tuple[str | AnsibleSequence[str] | D | bool]
     ]
     required_by: NotRequired[Dict[str, str | AnsibleSequence[str]]]
-    documentation: NotRequired[str | List[str]]
-
-
-AnsibleArgumentSpec = Dict[str, AnsibleOption]
 
 
 class AnsiblePluginTypes(StrEnum):
