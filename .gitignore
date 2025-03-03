@@ -9,6 +9,8 @@ failed.json
 /failed
 
 annie444-base*.tar.gz
+**/kanidm-test-vol.tar
+**/kanidm-test-vol.tar.gz.old
 
 # C extensions
 *.so
