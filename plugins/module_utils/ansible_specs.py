@@ -1,144 +1,100 @@
-from typing import Callable, TypedDict, List, Dict, Tuple, TypeVar, NotRequired
+from __future__ import absolute_import, annotations, division, print_function
+
+try:
+    from typing import Callable
+except ImportError:
+    from typing_extensions import Callable
+
+try:
+    from typing import TypedDict
+except ImportError:
+    from typing_extensions import TypedDict
+
+try:
+    from typing import List
+except ImportError:
+    from typing_extensions import List
+
+try:
+    from typing import Dict
+except ImportError:
+    from typing_extensions import Dict
+
+try:
+    from typing import Tuple
+except ImportError:
+    from typing_extensions import Tuple
+
+try:
+    from typing import TypeVar
+except ImportError:
+    from typing_extensions import TypeVar
+
+try:
+    from typing import NotRequired
+except ImportError:
+    from typing_extensions import NotRequired
+
+try:
+    from typing import Union
+except ImportError:
+    from typing_extensions import Union
 
 try:
     from enum import StrEnum
-
-    class OptionType(StrEnum):  # type: ignore
-        STR = "str"
-        INT = "int"
-        FLOAT = "float"
-        BOOL = "bool"
-        DICT = "dict"
-        LIST = "list"
-        PATH = "path"
-        RAW = "raw"
-        JSONARG = "jsonarg"
-        JSON = "json"
-        BYTES = "bytes"
-        BITS = "bits"
-
-    class AnsiblePluginTypes(StrEnum):  # type: ignore
-        LOOKUP = "lookup"
-        ACTION = "action"
-        BECOME = "become"
-        CACHE = "cache"
-        CALLBACK = "callback"
-        CLI_CONF = "cliconf"
-        CONNECTION = "connection"
-        DOCS = "docs"
-        FILTER = "filter"
-        HTTPAPI = "httpapi"
-        INVENTORY = "inventory"
-        MODULE = "module"
-        MODULE_UTILS = "module_utils"
-        NETCONF = "netconf"
-        SHELL = "shell"
-        STRATEGY = "strategy"
-        TERMINAL = "terminal"
-        TEST = "test"
-        VAR = "var"
-
-    class AnsibleModuleSupport(StrEnum):  # type: ignore
-        FULL = "full"
-        NONE = "none"
-        PARTIAL = "partial"
-        NA = "N/A"
-
 except ImportError:
-    try:
-        from enum import Enum
+    from strenum import StrEnum
 
-        class OptionType(str, Enum):  # type: ignore
-            STR = "str"
-            INT = "int"
-            FLOAT = "float"
-            BOOL = "bool"
-            DICT = "dict"
-            LIST = "list"
-            PATH = "path"
-            RAW = "raw"
-            JSONARG = "jsonarg"
-            JSON = "json"
-            BYTES = "bytes"
-            BITS = "bits"
 
-        class AnsiblePluginTypes(str, Enum):  # type: ignore
-            LOOKUP = "lookup"
-            ACTION = "action"
-            BECOME = "become"
-            CACHE = "cache"
-            CALLBACK = "callback"
-            CLI_CONF = "cliconf"
-            CONNECTION = "connection"
-            DOCS = "docs"
-            FILTER = "filter"
-            HTTPAPI = "httpapi"
-            INVENTORY = "inventory"
-            MODULE = "module"
-            MODULE_UTILS = "module_utils"
-            NETCONF = "netconf"
-            SHELL = "shell"
-            STRATEGY = "strategy"
-            TERMINAL = "terminal"
-            TEST = "test"
-            VAR = "var"
+class OptionType(StrEnum):  # type: ignore
+    STR = "str"
+    INT = "int"
+    FLOAT = "float"
+    BOOL = "bool"
+    DICT = "dict"
+    LIST = "list"
+    PATH = "path"
+    RAW = "raw"
+    JSONARG = "jsonarg"
+    JSON = "json"
+    BYTES = "bytes"
+    BITS = "bits"
 
-        class AnsibleModuleSupport(str, Enum):  # type: ignore
-            FULL = "full"
-            NONE = "none"
-            PARTIAL = "partial"
-            NA = "N/A"
 
-    except ImportError:
-        from strenum import StrEnum
+class AnsiblePluginTypes(StrEnum):  # type: ignore
+    LOOKUP = "lookup"
+    ACTION = "action"
+    BECOME = "become"
+    CACHE = "cache"
+    CALLBACK = "callback"
+    CLI_CONF = "cliconf"
+    CONNECTION = "connection"
+    DOCS = "docs"
+    FILTER = "filter"
+    HTTPAPI = "httpapi"
+    INVENTORY = "inventory"
+    MODULE = "module"
+    MODULE_UTILS = "module_utils"
+    NETCONF = "netconf"
+    SHELL = "shell"
+    STRATEGY = "strategy"
+    TERMINAL = "terminal"
+    TEST = "test"
+    VAR = "var"
 
-        class OptionType(StrEnum):
-            STR = "str"
-            INT = "int"
-            FLOAT = "float"
-            BOOL = "bool"
-            DICT = "dict"
-            LIST = "list"
-            PATH = "path"
-            RAW = "raw"
-            JSONARG = "jsonarg"
-            JSON = "json"
-            BYTES = "bytes"
-            BITS = "bits"
 
-        class AnsiblePluginTypes(StrEnum):
-            LOOKUP = "lookup"
-            ACTION = "action"
-            BECOME = "become"
-            CACHE = "cache"
-            CALLBACK = "callback"
-            CLI_CONF = "cliconf"
-            CONNECTION = "connection"
-            DOCS = "docs"
-            FILTER = "filter"
-            HTTPAPI = "httpapi"
-            INVENTORY = "inventory"
-            MODULE = "module"
-            MODULE_UTILS = "module_utils"
-            NETCONF = "netconf"
-            SHELL = "shell"
-            STRATEGY = "strategy"
-            TERMINAL = "terminal"
-            TEST = "test"
-            VAR = "var"
-
-        class AnsibleModuleSupport(StrEnum):
-            FULL = "full"
-            NONE = "none"
-            PARTIAL = "partial"
-            NA = "N/A"
+class AnsibleModuleSupport(StrEnum):  # type: ignore
+    FULL = "full"
+    NONE = "none"
+    PARTIAL = "partial"
+    NA = "N/A"
 
 
 T = TypeVar("T")
 D = TypeVar("D")
 
 S = TypeVar("S")
-AnsibleSequence = List[S] | Tuple[S, ...]
+AnsibleSequence = Union[List[S], Tuple[S, ...]]
 
 
 class AnsibleDeprecatedAlias(TypedDict):

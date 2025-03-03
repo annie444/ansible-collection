@@ -1,6 +1,6 @@
-from dataclasses import dataclass
-from typing import FrozenSet, Optional, List
+from __future__ import absolute_import, annotations, division, print_function
 
+from dataclasses import dataclass
 import yaml
 import tempfile
 import requests
@@ -20,149 +20,74 @@ from .exceptions import (
 )
 
 try:
-    from enum import StrEnum
-
-    class Scope(StrEnum):  # type: ignore
-        openid = "openid"
-        profile = "profile"
-        email = "email"
-        address = "address"
-        phone = "phone"
-        groups = "groups"
-        ssh_publickeys = "ssh_publickeys"
-
-    class ImageFormat(StrEnum):  # type: ignore
-        png = "png"
-        jpg = "jpg"
-        gif = "gif"
-        svg = "svg"
-        webp = "webp"
-        auto = "auto"
-
-        def get(self) -> str:
-            if self == ImageFormat.auto:
-                return ""
-            return self.value
-
-        def mime(self) -> str:
-            if self == ImageFormat.png:
-                return "image/png"
-            elif self == ImageFormat.jpg:
-                return "image/jpeg"
-            elif self == ImageFormat.gif:
-                return "image/gif"
-            elif self == ImageFormat.svg:
-                return "image/svg+xml"
-            elif self == ImageFormat.webp:
-                return "image/webp"
-            else:
-                raise ValueError(f"Invalid image format: {self.value}")
-
-    class ClaimJoin(StrEnum):  # type: ignore
-        array = "array"
-        csv = "csv"
-        ssv = "ssv"
-
-    class PrefUsername(StrEnum):  # type: ignore
-        spn = "spn"
-        short = "short"
-
+    from typing import FrozenSet
 except ImportError:
-    try:
-        from enum import Enum
+    from typing_extensions import FrozenSet
 
-        class Scope(str, Enum):  # type: ignore
-            openid = "openid"
-            profile = "profile"
-            email = "email"
-            address = "address"
-            phone = "phone"
-            groups = "groups"
-            ssh_publickeys = "ssh_publickeys"
+try:
+    from typing import Optional
+except ImportError:
+    from typing_extensions import Optional
 
-        class ImageFormat(str, Enum):  # type: ignore
-            png = "png"
-            jpg = "jpg"
-            gif = "gif"
-            svg = "svg"
-            webp = "webp"
-            auto = "auto"
+try:
+    from typing import List
+except ImportError:
+    from typing_extensions import List
 
-            def get(self) -> str:
-                if self == ImageFormat.auto:
-                    return ""
-                return self.value
 
-            def mime(self) -> str:
-                if self == ImageFormat.png:
-                    return "image/png"
-                elif self == ImageFormat.jpg:
-                    return "image/jpeg"
-                elif self == ImageFormat.gif:
-                    return "image/gif"
-                elif self == ImageFormat.svg:
-                    return "image/svg+xml"
-                elif self == ImageFormat.webp:
-                    return "image/webp"
-                else:
-                    raise ValueError(f"Invalid image format: {self.value}")
+try:
+    from enum import StrEnum
+except ImportError:
+    from strenum import StrEnum
 
-        class ClaimJoin(str, Enum):  # type: ignore
-            array = "array"
-            csv = "csv"
-            ssv = "ssv"
 
-        class PrefUsername(str, Enum):  # type: ignore
-            spn = "spn"
-            short = "short"
+class Scope(StrEnum):  # type: ignore
+    openid = "openid"
+    profile = "profile"
+    email = "email"
+    address = "address"
+    phone = "phone"
+    groups = "groups"
+    ssh_publickeys = "ssh_publickeys"
 
-    except ImportError:
-        from strenum import StrEnum
 
-        class Scope(StrEnum):
-            openid = "openid"
-            profile = "profile"
-            email = "email"
-            address = "address"
-            phone = "phone"
-            groups = "groups"
-            ssh_publickeys = "ssh_publickeys"
+class ImageFormat(StrEnum):  # type: ignore
+    png = "png"
+    jpg = "jpg"
+    gif = "gif"
+    svg = "svg"
+    webp = "webp"
+    auto = "auto"
 
-        class ImageFormat(StrEnum):
-            png = "png"
-            jpg = "jpg"
-            gif = "gif"
-            svg = "svg"
-            webp = "webp"
-            auto = "auto"
+    def get(self) -> str:
+        if self == ImageFormat.auto:
+            return ""
+        return self.value
 
-            def get(self) -> str:
-                if self == ImageFormat.auto:
-                    return ""
-                return self.value
+    def mime(self) -> str:
+        if self == ImageFormat.png:
+            return "image/png"
+        elif self == ImageFormat.jpg:
+            return "image/jpeg"
+        elif self == ImageFormat.gif:
+            return "image/gif"
+        elif self == ImageFormat.svg:
+            return "image/svg+xml"
+        elif self == ImageFormat.webp:
+            return "image/webp"
+        else:
+            raise ValueError(f"Invalid image format: {self.value}")
 
-            def mime(self) -> str:
-                if self == ImageFormat.png:
-                    return "image/png"
-                elif self == ImageFormat.jpg:
-                    return "image/jpeg"
-                elif self == ImageFormat.gif:
-                    return "image/gif"
-                elif self == ImageFormat.svg:
-                    return "image/svg+xml"
-                elif self == ImageFormat.webp:
-                    return "image/webp"
-                else:
-                    raise ValueError(f"Invalid image format: {self.value}")
 
-        class ClaimJoin(StrEnum):
-            array = "array"
-            csv = "csv"
-            ssv = "ssv"
+class ClaimJoin(StrEnum):  # type: ignore
+    array = "array"
+    csv = "csv"
+    ssv = "ssv"
 
-        class PrefUsername(StrEnum):
-            spn = "spn"
-            short = "short"
+
+class PrefUsername(StrEnum):  # type: ignore
+    spn = "spn"
+    short = "short"
 
 
 @dataclass

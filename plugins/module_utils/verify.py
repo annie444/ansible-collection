@@ -1,13 +1,19 @@
+from __future__ import absolute_import, annotations, division, print_function
+
 from pathlib import Path
 import tempfile
 from base64 import b64decode
-from typing import Any
 import gzip
 import zlib
 import bz2
 import tarfile
 import zipfile
 import os
+
+try:
+    from typing import Any
+except ImportError:
+    from typing_extensions import Any
 
 from ansible.module_utils.common.validation import (
     check_type_bool,
