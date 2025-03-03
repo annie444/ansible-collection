@@ -1,44 +1,14 @@
-from __future__ import absolute_import, annotations, division, print_function
-
-try:
-    from typing import Callable
-except ImportError:
-    from typing_extensions import Callable
-
-try:
-    from typing import TypedDict
-except ImportError:
-    from typing_extensions import TypedDict
-
-try:
-    from typing import List
-except ImportError:
-    from typing_extensions import List
-
-try:
-    from typing import Dict
-except ImportError:
-    from typing_extensions import Dict
-
-try:
-    from typing import Tuple
-except ImportError:
-    from typing_extensions import Tuple
-
-try:
-    from typing import TypeVar
-except ImportError:
-    from typing_extensions import TypeVar
-
-try:
-    from typing import NotRequired
-except ImportError:
-    from typing_extensions import NotRequired
-
-try:
-    from typing import Union
-except ImportError:
-    from typing_extensions import Union
+from __future__ import annotations, division
+from ansible.module_utils.compat.typing import (
+    Callable,
+    TypedDict,
+    List,
+    Dict,
+    Tuple,
+    TypeVar,
+    NotRequired,
+    Union,
+)
 
 try:
     from enum import StrEnum

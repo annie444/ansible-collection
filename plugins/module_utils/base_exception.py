@@ -1,3 +1,5 @@
+from __future__ import annotations, division
+
 from ansible.module_utils.common.text.converters import to_native
 
 
