@@ -944,7 +944,11 @@ class KanidmOauthArgs:
             for values in enumerate(kanidm_full_spec["mutually_exclusive"]):
                 mutually_exclusive.append([])
                 for item in values:
-                    if isinstance(item, list):
+                    if (
+                        isinstance(item, list)
+                        or isinstance(item, tuple)
+                        or isinstance(item, set)
+                    ):
                         for v in item:
                             mutually_exclusive[-1].append(f"kanidm.{v}")
                     else:
