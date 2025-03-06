@@ -967,21 +967,10 @@ class KanidmOauthArgs:
             StrEnum,
             yaml.representer.SafeRepresenter.represent_str,  # type: ignore
         )
-        arg_spec = cls.arg_spec()
-        to_del = []
-        to_add = {}
-        for k, v in arg_spec.items():
-            if "options" in v:
-                for opt_k in v["options"].keys():
-                    to_add[f"{k}.{opt_k}"] = v["options"][opt_k]
-                to_del.append(k)
-        arg_spec.update(to_add)
-        for k in to_del:
-            del arg_spec[k]["options"]
         if indentation is not None:
-            out: str = yaml.safe_dump(arg_spec, sort_keys=False)
+            out: str = yaml.safe_dump(cls.arg_spec(), sort_keys=False)
             values = []
             for line in out.splitlines():
                 values.append(f"{' ' * indentation}{line}")
             return "\n".join(values)
-        return yaml.safe_dump(arg_spec, sort_keys=False)
+        return yaml.safe_dump(cls.arg_spec(), sort_keys=False)
