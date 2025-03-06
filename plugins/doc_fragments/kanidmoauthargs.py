@@ -6,20 +6,20 @@ class ModuleDocFragment(object):
         required: true
         aliases:
         - client_name
-        documentation: The name of the OAuth client.
+        description: The name of the OAuth client.
       url:
         type: str
         required: true
         aliases:
         - client_url
-        documentation: The URL of the OAuth client's landing page.
+        description: The URL of the OAuth client's landing page.
       redirect_url:
         type: list
         elements: str
         required: true
         aliases:
         - redirect_urls
-        documentation: The redirect URLs for the OAuth client.
+        description: The redirect URLs for the OAuth client.
       scopes:
         type: list
         elements: str
@@ -34,7 +34,7 @@ class ModuleDocFragment(object):
         required: true
         aliases:
         - scope
-        documentation: The scopes requested by the OAuth client.
+        description: The scopes requested by the OAuth client.
       kanidm:
         type: dict
         options:
@@ -43,66 +43,68 @@ class ModuleDocFragment(object):
             required: true
             aliases:
             - kanidm_uri
-            documentation: The URI of the Kanidm server.
+            description: The URI of the Kanidm server.
           token:
             type: str
             required: false
             no_log: true
             aliases:
             - kanidm_token
-            documentation: The token for authentication.
+            description: The token for authentication.
           ca_path:
             type: path
             required: false
             aliases:
             - kanidm_ca_path
-            documentation: The path to the CA certificate.
+            description: The path to the CA certificate.
           username:
             type: str
             required: false
             no_log: true
             aliases:
             - kanidm_username
+            description: The username for authentication.
           password:
             type: str
             required: false
             no_log: true
             aliases:
             - kanidm_password
+            description: The password for authentication.
           ca_cert_data:
             type: str
             required: false
             no_log: true
-            documentation: The CA certificate data as a base64 encoded string.
+            description: The CA certificate data as a base64 encoded string.
           verify_ca:
             type: bool
             required: false
             default: true
-            documentation: Whether to verify the Kanidm server's certificate chain.
+            description: Whether to verify the Kanidm server's certificate chain.
           connect_timeout:
             type: int
             required: false
             default: 30
-            documentation: The connection timeout in seconds.
+            description: The connection timeout in seconds.
         required: true
-        documentation: Configuration for the Kanidm client.
+        description: Configuration for the Kanidm client.
       display_name:
         type: str
         required: false
         aliases:
         - client_display_name
         default: '{{ name }}'
-        documentation: The display name of the OAuth client.
+        description: The display name of the OAuth client.
       group:
         type: str
         default: idm_all_persons
         required: false
-        documentation: The group associated with the OAuth client. Defaults to all persons.
+        description: The group associated with the OAuth client. Defaults to all persons.
       public:
         type: bool
         default: false
         required: false
-        documentation: Indicates if the client is public.
+        description: Indicates if the client is public.
       claim_join:
         type: str
         choices:
@@ -111,27 +113,27 @@ class ModuleDocFragment(object):
         - ssv
         default: array
         required: false
-        documentation: How to join claims in the response. Defaults to array.
+        description: How to join claims in the response. Defaults to array.
       pkce:
         type: bool
         default: true
         required: false
-        documentation: Indicates if PKCE is enabled.
+        description: Indicates if PKCE is enabled.
       legacy_crypto:
         type: bool
         default: false
         required: false
-        documentation: Indicates if legacy cryptography is used.
+        description: Indicates if legacy cryptography is used.
       strict_redirect:
         type: bool
         default: true
         required: false
-        documentation: Indicates if strict redirect validation is enabled.
+        description: Indicates if strict redirect validation is enabled.
       local_redirect:
         type: bool
         default: false
         required: false
-        documentation: Indicates if local redirects are allowed.
+        description: Indicates if local redirects are allowed.
       sup_scopes:
         type: list
         elements: dict
@@ -141,7 +143,7 @@ class ModuleDocFragment(object):
             required: true
             aliases:
             - sup_scope_group
-            documentation: The group to which the additional scopes apply.
+            description: The group to which the additional scopes apply.
           scopes:
             type: list
             elements: str
@@ -154,9 +156,9 @@ class ModuleDocFragment(object):
             - groups
             - ssh_publickeys
             required: true
-            documentation: The additional scopes for the group.
+            description: The additional scopes for the group.
         required: false
-        documentation: Additional scopes for specific groups.
+        description: Additional scopes for specific groups.
       username:
         type: str
         choices:
@@ -164,8 +166,8 @@ class ModuleDocFragment(object):
         - short
         default: spn
         required: false
-        documentation: Preferred username format. Defaults to SPN which takes the format
-          of '<username>@<kanidm.uri>'.
+        description: Preferred username format. Defaults to SPN which takes the format of
+          '<username>@<kanidm.uri>'.
       custom_claims:
         type: list
         elements: dict
@@ -175,20 +177,20 @@ class ModuleDocFragment(object):
             required: true
             aliases:
             - claim_name
-            documentation: The name of the custom claim.
+            description: The name of the custom claim.
           group:
             type: str
             required: true
             aliases:
             - claim_group
-            documentation: The group to which the custom claim applies.
+            description: The group to which the custom claim applies.
           values:
             type: list
             elements: str
             required: true
-            documentation: The values for the custom claim.
+            description: The values for the custom claim.
         required: false
-        documentation: Custom claims to be included in the OAuth response.
+        description: Custom claims to be included in the OAuth response.
       image:
         type: dict
         options:
@@ -197,7 +199,7 @@ class ModuleDocFragment(object):
             required: true
             aliases:
             - image_src
-            documentation: The source URL of the image.
+            description: The source URL of the image.
           format:
             type: str
             choices:
@@ -209,15 +211,14 @@ class ModuleDocFragment(object):
             - auto
             default: auto
             required: false
-            documentation: The format of the image. Defaults to auto.
+            description: The format of the image. Defaults to auto.
         required: false
         aliases:
         - logo
-        documentation: Image configuration for the OAuth client.
+        description: Image configuration for the OAuth client.
       debug:
         type: bool
         default: false
         required: false
-        documentation: Enable debug mode.
+        description: Enable debug mode.
     """
-

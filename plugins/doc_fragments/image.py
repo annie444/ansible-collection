@@ -6,7 +6,7 @@ class ModuleDocFragment(object):
         required: true
         aliases:
         - image_src
-        documentation: The source URL of the image.
+        description: The source URL of the image.
       format:
         type: str
         choices:
@@ -18,5 +18,5 @@ class ModuleDocFragment(object):
         - auto
         default: auto
         required: false
-        documentation: The format of the image. Defaults to auto.
+        description: The format of the image. Defaults to auto.
     """

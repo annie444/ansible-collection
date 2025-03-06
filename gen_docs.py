@@ -96,7 +96,7 @@ def main():
                 'class ModuleDocFragment(object):\n    DOCUMENTATION = r"""\n    options:\n'
             )
             f.write(document)
-            f.write('\n    """')
+            f.write('\n    """\n')
 
 
 if __name__ == "__main__":

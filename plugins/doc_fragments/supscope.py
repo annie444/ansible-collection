@@ -6,7 +6,7 @@ class ModuleDocFragment(object):
         required: true
         aliases:
         - sup_scope_group
-        documentation: The group to which the additional scopes apply.
+        description: The group to which the additional scopes apply.
       scopes:
         type: list
         elements: str
@@ -19,5 +19,5 @@ class ModuleDocFragment(object):
         - groups
         - ssh_publickeys
         required: true
-        documentation: The additional scopes for the group.
+        description: The additional scopes for the group.
     """
