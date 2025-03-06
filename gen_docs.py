@@ -87,7 +87,9 @@ def main():
         frag_name = doc.lower()
         try:
             document = eval(f"module.{doc}.documentation(indentation=6)")
-        except Exception:
+        except Exception as e:
+            print(f"Failed to generate documentation for {doc} in {plug}")
+            print(e)
             continue
         with open(
             f"{os.path.dirname(__file__)}/plugins/doc_fragments/{frag_name}.py", "w"

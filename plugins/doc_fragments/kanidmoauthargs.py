@@ -37,55 +37,6 @@ class ModuleDocFragment(object):
         description: The scopes requested by the OAuth client.
       kanidm:
         type: dict
-        options:
-          uri:
-            type: str
-            required: true
-            aliases:
-            - kanidm_uri
-            description: The URI of the Kanidm server.
-          token:
-            type: str
-            required: false
-            no_log: true
-            aliases:
-            - kanidm_token
-            description: The token for authentication.
-          ca_path:
-            type: path
-            required: false
-            aliases:
-            - kanidm_ca_path
-            description: The path to the CA certificate.
-          username:
-            type: str
-            required: false
-            no_log: true
-            aliases:
-            - kanidm_username
-            description: The username for authentication.
-          password:
-            type: str
-            required: false
-            no_log: true
-            aliases:
-            - kanidm_password
-            description: The password for authentication.
-          ca_cert_data:
-            type: str
-            required: false
-            no_log: true
-            description: The CA certificate data as a base64 encoded string.
-          verify_ca:
-            type: bool
-            required: false
-            default: true
-            description: Whether to verify the Kanidm server's certificate chain.
-          connect_timeout:
-            type: int
-            required: false
-            default: 30
-            description: The connection timeout in seconds.
         required: true
         description: Configuration for the Kanidm client.
       display_name:
@@ -137,26 +88,6 @@ class ModuleDocFragment(object):
       sup_scopes:
         type: list
         elements: dict
-        options:
-          group:
-            type: str
-            required: true
-            aliases:
-            - sup_scope_group
-            description: The group to which the additional scopes apply.
-          scopes:
-            type: list
-            elements: str
-            choices:
-            - openid
-            - profile
-            - email
-            - address
-            - phone
-            - groups
-            - ssh_publickeys
-            required: true
-            description: The additional scopes for the group.
         required: false
         description: Additional scopes for specific groups.
       username:
@@ -171,47 +102,10 @@ class ModuleDocFragment(object):
       custom_claims:
         type: list
         elements: dict
-        options:
-          name:
-            type: str
-            required: true
-            aliases:
-            - claim_name
-            description: The name of the custom claim.
-          group:
-            type: str
-            required: true
-            aliases:
-            - claim_group
-            description: The group to which the custom claim applies.
-          values:
-            type: list
-            elements: str
-            required: true
-            description: The values for the custom claim.
         required: false
         description: Custom claims to be included in the OAuth response.
       image:
         type: dict
-        options:
-          src:
-            type: str
-            required: true
-            aliases:
-            - image_src
-            description: The source URL of the image.
-          format:
-            type: str
-            choices:
-            - png
-            - jpg
-            - gif
-            - svg
-            - webp
-            - auto
-            default: auto
-            required: false
-            description: The format of the image. Defaults to auto.
         required: false
         aliases:
         - logo
@@ -221,4 +115,106 @@ class ModuleDocFragment(object):
         default: false
         required: false
         description: Enable debug mode.
+      kanidm.uri:
+        type: str
+        required: true
+        aliases:
+        - kanidm_uri
+        description: The URI of the Kanidm server.
+      kanidm.token:
+        type: str
+        required: false
+        no_log: true
+        aliases:
+        - kanidm_token
+        description: The token for authentication.
+      kanidm.ca_path:
+        type: path
+        required: false
+        aliases:
+        - kanidm_ca_path
+        description: The path to the CA certificate.
+      kanidm.username:
+        type: str
+        required: false
+        no_log: true
+        aliases:
+        - kanidm_username
+        description: The username for authentication.
+      kanidm.password:
+        type: str
+        required: false
+        no_log: true
+        aliases:
+        - kanidm_password
+        description: The password for authentication.
+      kanidm.ca_cert_data:
+        type: str
+        required: false
+        no_log: true
+        description: The CA certificate data as a base64 encoded string.
+      kanidm.verify_ca:
+        type: bool
+        required: false
+        default: true
+        description: Whether to verify the Kanidm server's certificate chain.
+      kanidm.connect_timeout:
+        type: int
+        required: false
+        default: 30
+        description: The connection timeout in seconds.
+      sup_scopes.group:
+        type: str
+        required: true
+        aliases:
+        - sup_scope_group
+        description: The group to which the additional scopes apply.
+      sup_scopes.scopes:
+        type: list
+        elements: str
+        choices:
+        - openid
+        - profile
+        - email
+        - address
+        - phone
+        - groups
+        - ssh_publickeys
+        required: true
+        description: The additional scopes for the group.
+      custom_claims.name:
+        type: str
+        required: true
+        aliases:
+        - claim_name
+        description: The name of the custom claim.
+      custom_claims.group:
+        type: str
+        required: true
+        aliases:
+        - claim_group
+        description: The group to which the custom claim applies.
+      custom_claims.values:
+        type: list
+        elements: str
+        required: true
+        description: The values for the custom claim.
+      image.src:
+        type: str
+        required: true
+        aliases:
+        - image_src
+        description: The source URL of the image.
+      image.format:
+        type: str
+        choices:
+        - png
+        - jpg
+        - gif
+        - svg
+        - webp
+        - auto
+        default: auto
+        required: false
+        description: The format of the image. Defaults to auto.
     """

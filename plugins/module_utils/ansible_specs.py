@@ -49,7 +49,7 @@ class OptionType(StrEnum):  # type: ignore
 
     @classmethod
     def documentation(cls) -> str:
-        return str(cls)
+        return str(cls.value)
 
 
 class AnsiblePluginTypes(StrEnum):  # type: ignore
@@ -81,7 +81,7 @@ class AnsiblePluginTypes(StrEnum):  # type: ignore
 
     @classmethod
     def documentation(cls) -> str:
-        return str(cls)
+        return str(cls.value)
 
 
 class AnsibleModuleSupport(StrEnum):  # type: ignore
@@ -98,7 +98,7 @@ class AnsibleModuleSupport(StrEnum):  # type: ignore
 
     @classmethod
     def documentation(cls) -> str:
-        return str(cls)
+        return str(cls.value)
 
 
 T = TypeVar("T")

@@ -944,8 +944,11 @@ class KanidmOauthArgs:
             for values in enumerate(kanidm_full_spec["mutually_exclusive"]):
                 mutually_exclusive.append([])
                 for item in values:
-                    for v in item:
-                        mutually_exclusive[-1].append(f"kanidm.{v}")
+                    if isinstance(item, list):
+                        for v in item:
+                            mutually_exclusive[-1].append(f"kanidm.{v}")
+                    else:
+                        mutually_exclusive[-1].append(f"kanidm.{item}")
         if "required_together" in kanidm_full_spec:
             for values in enumerate(kanidm_full_spec["required_together"]):
                 required_together.append([])
@@ -965,11 +968,16 @@ class KanidmOauthArgs:
             yaml.representer.SafeRepresenter.represent_str,  # type: ignore
         )
         arg_spec = cls.arg_spec()
+        to_del = []
+        to_add = {}
         for k, v in arg_spec.items():
             if "options" in v:
                 for opt_k in v["options"].keys():
-                    arg_spec[f"{k}.{opt_k}"] = v["options"][opt_k]
-                del v["options"]
+                    to_add[f"{k}.{opt_k}"] = v["options"][opt_k]
+                to_del.append(k)
+        arg_spec.update(to_add)
+        for k in to_del:
+            del arg_spec[k]["options"]
         if indentation is not None:
             out: str = yaml.safe_dump(arg_spec, sort_keys=False)
             values = []
