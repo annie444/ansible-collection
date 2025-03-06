@@ -21,6 +21,10 @@ author: Annie Ehler (@annie444)
 
 extends_documentation_fragment:
     - annie444.base.kanidmoauthargs
+    - annie444.base.kanidmconf
+    - annie444.base.image
+    - annie444.base.supscope
+    - annie444.base.customclaim
 """
 
 EXAMPLES = r"""
