@@ -130,7 +130,7 @@ class AnsibleOption(TypedDict):
     removed_from_collection: NotRequired[str]
     deprecated_aliases: NotRequired[List[AnsibleDeprecatedAlias]]
     aliases: NotRequired[List[str]]
-    description: NotRequired[str]
+    description: str
     documentation: NotRequired[str | List[str]]
 
 
