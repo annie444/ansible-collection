@@ -20,7 +20,7 @@ requirements:
 author: Annie Ehler (@annie444)
 
 extends_documentation_fragment:
-    - annie444.base.kanidm_create_oauth_options
+    - annie444.base.kanidmoauthargs
 """
 
 EXAMPLES = r"""
