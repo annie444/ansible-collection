@@ -1,1 +1,2 @@
-class ModuleDocFragment(object):    DOCUMENTATION = r"""<enum 'OptionType'>"""
+class ModuleDocFragment(object):
+    DOCUMENTATION = r"""<enum 'OptionType'>"""

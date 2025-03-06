@@ -1,1 +1,3 @@
-class ModuleDocFragment(object):    DOCUMENTATION = r"""<enum 'PrefUsername'>"""
+class ModuleDocFragment(object):
+    DOCUMENTATION = r"""<enum 'PrefUsername'>"""
+
