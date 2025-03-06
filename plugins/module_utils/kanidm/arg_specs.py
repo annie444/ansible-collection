@@ -944,7 +944,8 @@ class KanidmOauthArgs:
             for values in enumerate(kanidm_full_spec["mutually_exclusive"]):
                 mutually_exclusive.append([])
                 for item in values:
-                    mutually_exclusive[-1].append(f"kanidm.{item}")
+                    for v in item:
+                        mutually_exclusive[-1].append(f"kanidm.{v}")
         if "required_together" in kanidm_full_spec:
             for values in enumerate(kanidm_full_spec["required_together"]):
                 required_together.append([])
