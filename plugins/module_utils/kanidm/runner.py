@@ -2,6 +2,7 @@ from __future__ import absolute_import, annotations, division, print_function
 
 from .arg_specs import (
     KanidmOauthArgs,
+    KanidmGroupArgs,
     PrefUsername,
 )
 from .exceptions import (
@@ -193,8 +194,8 @@ process_response = {
 
 
 class Kanidm(object):
-    def __init__(self, args: KanidmOauthArgs):
-        self.args: KanidmOauthArgs = args
+    def __init__(self, args: KanidmOauthArgs | KanidmGroupArgs):
+        self.args: KanidmOauthArgs | KanidmGroupArgs = args
         self.session = Session()
         self.response: Response | None = None
         self.json: Dict = {}
