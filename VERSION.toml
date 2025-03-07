@@ -1,7 +1,7 @@
-version = "1.0.2"
+version = "1.0.3"
 major = 1
 minor = 0
-patch = 2
+patch = 3
 
 [[files]]
 file = "galaxy.yml"
