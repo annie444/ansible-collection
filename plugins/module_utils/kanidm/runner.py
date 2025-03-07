@@ -3,6 +3,7 @@ from __future__ import absolute_import, annotations, division, print_function
 from .arg_specs import (
     KanidmOauthArgs,
     KanidmGroupArgs,
+    KanidmConf,
     PrefUsername,
 )
 from .exceptions import (
@@ -193,32 +194,30 @@ process_response = {
 }
 
 
-class Kanidm(object):
-    def __init__(self, args: KanidmOauthArgs | KanidmGroupArgs):
-        self.args: KanidmOauthArgs | KanidmGroupArgs = args
-        self.session = Session()
+class KanidmApi(object):
+    def __init__(self, args: KanidmConf, debug: bool = False):
+        self.args: KanidmConf = args
+        self.session: Session = Session()
         self.response: Response | None = None
         self.json: Dict = {}
         self.token: str | None = None
         self.text: str = ""
         self.process_request: Callable[[PreparedRequest], str | RequestDict] = (
-            process_request[args.debug]
+            process_request[debug]
         )
         self.process_response: Callable[[Response], str | ResponseDict] = (
-            process_response[args.debug]
+            process_response[debug]
         )
         self.requests: Dict[str, RequestDict | str] = {}
         self.responses: Dict[str, ResponseDict | str] = {}
-        self.session.verify = self.args.kanidm.verify_ca
-        if self.args.kanidm.ca_path is not None:
-            if self.args.kanidm.ca_path.is_file():
+        self.session.verify = self.args.verify_ca
+        if self.args.ca_path is not None:
+            if self.args.ca_path.is_file():
                 self.session.verify = str(
-                    self.args.kanidm.ca_path.expanduser().absolute().parent
+                    self.args.ca_path.expanduser().absolute().parent
                 )
             else:
-                self.session.verify = str(
-                    self.args.kanidm.ca_path.expanduser().absolute()
-                )
+                self.session.verify = str(self.args.ca_path.expanduser().absolute())
 
     def set_headers(self, content_type: str = "application/json"):
         self.session.headers["User-Agent"] = "Ansible-Kanidm"
@@ -233,102 +232,6 @@ class Kanidm(object):
         return (
             f"{self.response.status_code} {self.response.reason} {self.response.text}"
         )
-
-    def create_oauth_client(self):
-        self.authenticate()
-
-        if not self.check_token():
-            raise KanidmAuthenticationFailure(
-                "Unable to establish an authenticated connection with the kanidm server"
-            )
-
-        if not self.get_client():
-            if not self.args.public:
-                if not self.create_basic_client():
-                    raise KanidmModuleError(
-                        f"Unable to create or get client {self.args.name}. Got {self.error}"
-                    )
-            else:
-                if not self.create_public_client():
-                    raise KanidmModuleError(
-                        f"Unable to create or get public client {self.args.name}. Got {self.error}"
-                    )
-
-        if not self.get_client():
-            raise KanidmModuleError(
-                f"Unable to get client {self.args.name}. Got {self.error}"
-            )
-
-        if not self.args.public:
-            if not self.set_pkce():
-                raise KanidmModuleError(
-                    f"Unable to set PKCE for client {self.args.name}. Got {self.error}"
-                )
-
-            if not self.set_legacy_crypto():
-                raise KanidmModuleError(
-                    f"Unable to set legacy crypto for client {self.args.name}. Got {self.error}"
-                )
-        else:
-            if not self.set_localhost_redirect():
-                raise KanidmModuleError(
-                    f"Unable to set localhost redirect policy for client {self.args.name}. Got {self.error}"
-                )
-
-        if not self.add_redirect_urls():
-            raise KanidmModuleError(
-                f"Unable to add redirect URLs for client {self.args.name}. Got {self.error}"
-            )
-
-        if not self.update_scope_map():
-            raise KanidmModuleError(
-                f"Unable to update scope map for client {self.args.name}. Got {self.error}"
-            )
-
-        if not self.set_preferred_username():
-            raise KanidmModuleError(
-                f"Unable to set preferred username for client {self.args.name}. Got {self.error}"
-            )
-
-        if not self.set_strict_redirect():
-            raise KanidmModuleError(
-                f"Unable to set strict redirect for client {self.args.name}. Got {self.error}"
-            )
-
-        if self.args.image is not None:
-            if not self.add_image():
-                raise KanidmModuleError(
-                    f"Unable to add image for client {self.args.name}. Got {self.error}"
-                )
-
-        if self.args.sup_scopes is not None:
-            if not self.update_sup_scope_map():
-                raise KanidmModuleError(
-                    f"Unable to update supplemental scope map for client {self.args.name}. Got {self.error}"
-                )
-
-        if self.args.custom_claims is not None:
-            if not self.update_custom_claim_map():
-                raise KanidmModuleError(
-                    f"Unable to update custom claim map for client {self.args.name}. Got {self.error}"
-                )
-
-            if not self.update_custom_claim_join():
-                raise KanidmModuleError(
-                    f"Unable to update custom claim join for client {self.args.name}. Got {self.error}"
-                )
-
-        if not self.get_client_secret():
-            raise KanidmModuleError(
-                f"Unable to get client secret for client {self.args.name}. Got {self.error}"
-            )
-
-        if self.text is None:
-            raise KanidmModuleError(
-                f"Unable to parse the client secret for client {self.args.name}. Got {self.text}"
-            )
-
-        return self.text
 
     def verify_response(self) -> bool:
         if self.response.status_code < 200 or self.response.status_code >= 300:
@@ -345,9 +248,7 @@ class Kanidm(object):
 
     def get(self, name: str, path: str) -> bool:
         self.set_headers()
-        req = self.session.prepare_request(
-            Request("GET", f"{self.args.kanidm.uri}{path}")
-        )
+        req = self.session.prepare_request(Request("GET", f"{self.args.uri}{path}"))
         self.send(name, req)
         return self.verify_response()
 
@@ -360,7 +261,7 @@ class Kanidm(object):
         content_type: str = "application/json",
     ) -> bool:
         self.set_headers(content_type=content_type)
-        pre_req = Request("POST", f"{self.args.kanidm.uri}{path}")
+        pre_req = Request("POST", f"{self.args.uri}{path}")
         if json is not None:
             pre_req.json = json
         if data is not None:
@@ -377,7 +278,7 @@ class Kanidm(object):
         data: Optional[Any] = None,
     ) -> bool:
         self.set_headers()
-        pre_req = Request("PATCH", f"{self.args.kanidm.uri}{path}")
+        pre_req = Request("PATCH", f"{self.args.uri}{path}")
         if json is not None:
             pre_req.json = json
         if data is not None:
@@ -392,15 +293,14 @@ class Kanidm(object):
         self.responses[name] = self.process_response(self.response)
 
     def authenticate(self):
-        if self.args.kanidm.token is None and (
-            self.args.kanidm.username is None or self.args.kanidm.password is None
+        if self.args.token is None and (
+            self.args.username is None or self.args.password is None
         ):
             raise KanidmRequiredOptionError("No authentication method specified")
-        if self.args.kanidm.token is not None and self.check_token():
+        if self.args.token is not None and self.check_token():
             return
         elif (
-            self.args.kanidm.username is not None
-            and self.args.kanidm.password is not None
+            self.args.username is not None and self.args.password is not None
         ) and self.login():
             return
         else:
@@ -410,7 +310,7 @@ class Kanidm(object):
 
     def check_token(self) -> bool:
         if (
-            self.args.kanidm.token is None
+            self.args.token is None
             and not isinstance(self.session.auth, BearerAuth)
             and (
                 isinstance(self.session.auth, BearerAuth)
@@ -418,16 +318,16 @@ class Kanidm(object):
             )
         ):
             raise KanidmArgsException("No token specified")
-        if self.args.kanidm.token is not None and (
+        if self.args.token is not None and (
             not isinstance(self.session.auth, BearerAuth)
             or self.session.auth.token is None
         ):
-            self.session.auth = BearerAuth(self.args.kanidm.token)
+            self.session.auth = BearerAuth(self.args.token)
 
         return self.get(name="check_token", path="/v1/auth/valid")
 
     def login(self) -> bool:
-        if self.args.kanidm.username is None or self.args.kanidm.password is None:
+        if self.args.username is None or self.args.password is None:
             raise KanidmArgsException("No username or password specified")
 
         if not self.post(
@@ -436,7 +336,7 @@ class Kanidm(object):
             json={
                 "step": {
                     "init2": {
-                        "username": self.args.kanidm.username,
+                        "username": self.args.username,
                         "issue": "token",
                         "privileged": True,
                     }
@@ -476,7 +376,7 @@ class Kanidm(object):
             json={
                 "step": {
                     "cred": {
-                        "password": self.args.kanidm.password,
+                        "password": self.args.password,
                     }
                 }
             },
@@ -491,13 +391,158 @@ class Kanidm(object):
         self.session.auth = BearerAuth(self.json["state"]["success"])
         return True
 
+    def patch_oauth(
+        self, name: str, oauth_name: str, attrs: Dict[str, List[str]]
+    ) -> bool:
+        return self.patch(
+            name=name,
+            path=f"/v1/oauth2/{oauth_name}",
+            json={
+                "attrs": attrs,
+            },
+        )
+
+
+class KanidmGroup(object):
+    def __init__(self, args: KanidmGroupArgs):
+        self.args: KanidmGroupArgs = args
+        self.api = KanidmApi(args=args.kanidm, debug=args.debug)
+
+    def create_group(self):
+        self.api.authenticate()
+
+        if not self.api.check_token():
+            raise KanidmAuthenticationFailure(
+                "Unable to establish an authenticated connection with the kanidm server"
+            )
+
+
+class KanidmOAuth(object):
+    def __init__(self, args: KanidmOauthArgs):
+        self.args: KanidmOauthArgs = args
+        self.api = KanidmApi(args=args.kanidm, debug=args.debug)
+
+    def create_oauth_client(self) -> str:
+        self.api.authenticate()
+
+        if not self.api.check_token():
+            raise KanidmAuthenticationFailure(
+                "Unable to establish an authenticated connection with the kanidm server"
+            )
+
+        if not self.get_client():
+            if not self.args.public:
+                if not self.create_basic_client():
+                    raise KanidmModuleError(
+                        f"Unable to create or get client {self.args.name}. Got {self.api.error}"
+                    )
+            else:
+                if not self.create_public_client():
+                    raise KanidmModuleError(
+                        f"Unable to create or get public client {self.args.name}. Got {self.api.error}"
+                    )
+
+        if not self.get_client():
+            raise KanidmModuleError(
+                f"Unable to get client {self.args.name}. Got {self.api.error}"
+            )
+
+        if not self.args.public:
+            if not self.set_pkce():
+                raise KanidmModuleError(
+                    f"Unable to set PKCE for client {self.args.name}. Got {self.api.error}"
+                )
+
+            if not self.set_legacy_crypto():
+                raise KanidmModuleError(
+                    f"Unable to set legacy crypto for client {self.args.name}. Got {self.api.error}"
+                )
+        else:
+            if not self.set_localhost_redirect():
+                raise KanidmModuleError(
+                    f"Unable to set localhost redirect policy for client {self.args.name}. Got {self.api.error}"
+                )
+
+        if not self.add_redirect_urls():
+            raise KanidmModuleError(
+                f"Unable to add redirect URLs for client {self.args.name}. Got {self.api.error}"
+            )
+
+        if not self.update_scope_map():
+            raise KanidmModuleError(
+                f"Unable to update scope map for client {self.args.name}. Got {self.api.error}"
+            )
+
+        if not self.set_preferred_username():
+            raise KanidmModuleError(
+                f"Unable to set preferred username for client {self.args.name}. Got {self.api.error}"
+            )
+
+        if not self.set_strict_redirect():
+            raise KanidmModuleError(
+                f"Unable to set strict redirect for client {self.args.name}. Got {self.api.error}"
+            )
+
+        if self.args.image is not None:
+            if not self.add_image():
+                raise KanidmModuleError(
+                    f"Unable to add image for client {self.args.name}. Got {self.api.error}"
+                )
+
+        if self.args.sup_scopes is not None:
+            if not self.update_sup_scope_map():
+                raise KanidmModuleError(
+                    f"Unable to update supplemental scope map for client {self.args.name}. Got {self.api.error}"
+                )
+
+        if self.args.custom_claims is not None:
+            if not self.update_custom_claim_map():
+                raise KanidmModuleError(
+                    f"Unable to update custom claim map for client {self.args.name}. Got {self.api.error}"
+                )
+
+            if not self.update_custom_claim_join():
+                raise KanidmModuleError(
+                    f"Unable to update custom claim join for client {self.args.name}. Got {self.api.error}"
+                )
+
+        if not self.get_client_secret():
+            raise KanidmModuleError(
+                f"Unable to get client secret for client {self.args.name}. Got {self.api.error}"
+            )
+
+        if self.api.text is None:
+            raise KanidmModuleError(
+                f"Unable to parse the client secret for client {self.args.name}. Got {self.api.text}"
+            )
+
+        return self.api.text
+
+    def get_client(self) -> bool:
+        if self.args.name is None:
+            raise KanidmRequiredOptionError("No name specified")
+
+        if not self.api.get(
+            name="get_client",
+            path=f"/v1/oauth2/{self.args.name}",
+        ):
+            return False
+
+        try:
+            self.api.text = self.api.json["attrs"]["uuid"][0]
+        except Exception:
+            self.api.text = ""
+            return False
+
+        return True
+
     def create_basic_client(self) -> bool:
         if self.args.name is None:
             raise KanidmRequiredOptionError("No name specified")
         if self.args.url is None:
             raise KanidmRequiredOptionError("No url specified")
 
-        return self.post(
+        return self.api.post(
             name="create_basic_client",
             path="/v1/oauth2/_basic",
             json={
@@ -512,24 +557,6 @@ class Kanidm(object):
             },
         )
 
-    def get_client(self) -> bool:
-        if self.args.name is None:
-            raise KanidmRequiredOptionError("No name specified")
-
-        if not self.get(
-            name="get_client",
-            path=f"/v1/oauth2/{self.args.name}",
-        ):
-            return False
-
-        try:
-            self.text = self.json["attrs"]["uuid"][0]
-        except Exception:
-            self.text = ""
-            return False
-
-        return True
-
     def create_public_client(self) -> bool:
         if not self.args.public:
             raise KanidmArgsException(
@@ -540,7 +567,7 @@ class Kanidm(object):
         if self.args.url is None:
             raise KanidmRequiredOptionError("No url specified")
 
-        return self.post(
+        return self.api.post(
             name="create_public_client",
             path="/v1/oauth2/_public",
             json={
@@ -563,7 +590,7 @@ class Kanidm(object):
         if not self.args.scopes:
             raise KanidmRequiredOptionError("No scopes specified")
 
-        return self.post(
+        return self.api.post(
             name="update_scope_map",
             path=f"/v1/oauth2/{self.args.name}/_scopemap/{self.args.group}",
             json=self.args.scopes,
@@ -576,7 +603,7 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No name specified")
 
         if index is not None:
-            return self.post(
+            return self.api.post(
                 name=f"update_sup_scope_map[{index}]",
                 path=f"/v1/oauth2/{self.args.name}/_sup_scopemap/{self.args.sup_scopes[index].group}",
                 json=self.args.sup_scopes[index].scopes,
@@ -584,14 +611,14 @@ class Kanidm(object):
 
         else:
             for i, sup_scope in enumerate(self.args.sup_scopes):
-                if not self.post(
+                if not self.api.post(
                     name=f"update_sup_scope_map[{i}]",
                     path=f"/v1/oauth2/{self.args.name}/_sup_scopemap/{sup_scope.group}",
                     json=sup_scope.scopes,
                 ):
                     return False
 
-        return self.verify_response()
+        return self.api.verify_response()
 
     def add_image(self) -> bool:
         if self.args.image is None:
@@ -600,11 +627,6 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No name specified")
 
         self.args.image.get()
-        self.session.headers["User-Agent"] = "Ansible-Kanidm"
-        self.session.headers["Cache-Control"] = "no-cache"
-        self.session.headers["Accept"] = "*/*"
-        self.session.headers["Accept-Encoding"] = "gzip, deflate, br"
-        self.session.headers["Connection"] = "keep-alive"
 
         m = MultipartEncoder(
             {
@@ -616,9 +638,7 @@ class Kanidm(object):
             }
         )
 
-        self.session.headers["Content-Type"] = m.content_type
-
-        if not self.post(
+        if not self.api.post(
             name="add_image",
             path=f"/v1/oauth2/{self.args.name}/_image",
             data=m,
@@ -628,24 +648,13 @@ class Kanidm(object):
 
         return True
 
-    def patch_oauth(self, name: str, attrs: Dict[str, List[str]]) -> bool:
-        if self.args.name is None:
-            raise KanidmRequiredOptionError("No name specified")
-
-        return self.patch(
-            name=name,
-            path=f"/v1/oauth2/{self.args.name}",
-            json={
-                "attrs": attrs,
-            },
-        )
-
     def set_pkce(self) -> bool:
         if self.args.pkce is None:
             raise KanidmRequiredOptionError("No PKCE specified")
 
-        return self.patch_oauth(
+        return self.api.patch_oauth(
             name="set_pkce",
+            oauth_name=self.args.name,
             attrs={
                 "oauth2_allow_insecure_client_disable_pkce": [
                     str(self.args.pkce).lower()
@@ -657,8 +666,9 @@ class Kanidm(object):
         if self.args.legacy_crypto is None:
             raise KanidmRequiredOptionError("No legacy crypto specified")
 
-        return self.patch_oauth(
+        return self.api.patch_oauth(
             name="set_legacy_crypto",
+            oauth_name=self.args.name,
             attrs={
                 "oauth2_jwt_legacy_crypto_enable": [
                     str(self.args.legacy_crypto).lower()
@@ -670,8 +680,9 @@ class Kanidm(object):
         if self.args.username is None:
             raise KanidmRequiredOptionError("No username specified")
 
-        return self.patch_oauth(
+        return self.api.patch_oauth(
             name="set_preferred_username",
+            oauth_name=self.args.name,
             attrs={
                 "oauth2_prefer_short_username": [
                     str(self.args.username == PrefUsername.short).lower()
@@ -683,8 +694,9 @@ class Kanidm(object):
         if self.args.local_redirect is None:
             raise KanidmRequiredOptionError("No localhost redirect specified")
 
-        return self.patch_oauth(
+        return self.api.patch_oauth(
             name="set_localhost_redirect",
+            oauth_name=self.args.name,
             attrs={
                 "oauth2_allow_localhost_redirect": [
                     str(self.args.local_redirect).lower()
@@ -696,8 +708,9 @@ class Kanidm(object):
         if self.args.strict_redirect is None:
             raise KanidmRequiredOptionError("No strict redirect specified")
 
-        return self.patch_oauth(
+        return self.api.patch_oauth(
             name="set_strict_redirect",
+            oauth_name=self.args.name,
             attrs={
                 "oauth2_strict_redirect_uri": [str(self.args.strict_redirect).lower()],
             },
@@ -712,7 +725,7 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No group specified")
 
         for i, c in enumerate(self.args.custom_claims):
-            if not self.post(
+            if not self.api.post(
                 name=f"update_custom_claim_map[{i}]",
                 path=f"/v1/oauth2/{self.args.name}/_claimmap/{self.args.name}/{self.args.group}",
                 json=[str(v) for v in c.values],
@@ -729,7 +742,7 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No claims specified")
 
         for i, c in enumerate(self.args.custom_claims):
-            if not self.post(
+            if not self.api.post(
                 name=f"update_custom_claim_join[{i}]",
                 path=f"/v1/oauth2/{self.args.name}/_claimmap/{self.args.claim_join}",
                 json=self.args.claim_join,
@@ -745,8 +758,9 @@ class Kanidm(object):
             raise KanidmRequiredOptionError("No redirect URL specified")
 
         for url in self.args.redirect_url:
-            if not self.patch_oauth(
+            if not self.api.patch_oauth(
                 name=f"add_redirect_url[{url}]",
+                oauth_name=self.args.name,
                 attrs={"oauth2_rs_origin": [url]},
             ):
                 return False
@@ -756,7 +770,7 @@ class Kanidm(object):
         if self.args.name is None:
             raise KanidmRequiredOptionError("No name specified")
 
-        return self.get(
+        return self.api.get(
             name="get_client_secret",
             path=f"/v1/oauth2/{self.args.name}/_basic_secret",
         )
