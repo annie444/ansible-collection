@@ -92,7 +92,7 @@ from ..module_utils.kanidm.arg_specs import (  # pylint: disable=E0401  # noqa: 
     STR_ENUM_IMP_ERR,
 )
 from ..module_utils.kanidm.runner import (  # pylint: disable=E0401  # noqa: E402
-    Kanidm,
+    KanidmOAuth,
     HAS_REQUESTS as RUN_HAS_REQ,
     REQUESTS_IMP_ERR as RUN_REQ_IMP_ERR,
     HAS_REQUESTS_TOOLS,
@@ -163,57 +163,57 @@ def run_module():
         module.exit_json(**result)
 
     try:
-        kanidm: Kanidm = Kanidm(args)
+        kanidm: KanidmOAuth = KanidmOAuth(args)
     except Exception as e:
         module.fail_json(msg=f"Unexpected error: {e}", **result)
 
     try:
         result["secret"] = kanidm.create_oauth_client()
     except KanidmArgsException as e:
-        result["requests"] = kanidm.requests
-        result["responses"] = kanidm.responses
+        result["requests"] = kanidm.api.requests
+        result["responses"] = kanidm.api.responses
         result["message"] = "failed"
         module.fail_json(msg=e.message, **result)
     except KanidmRequiredOptionError as e:
-        result["requests"] = kanidm.requests
-        result["responses"] = kanidm.responses
+        result["requests"] = kanidm.api.requests
+        result["responses"] = kanidm.api.responses
         result["message"] = "failed"
         module.fail_json(msg=e.message, **result)
     except KanidmAuthenticationFailure as e:
-        result["requests"] = kanidm.requests
-        result["responses"] = kanidm.responses
+        result["requests"] = kanidm.api.requests
+        result["responses"] = kanidm.api.responses
         result["message"] = "failed"
         module.fail_json(msg=e.message, **result)
     except KanidmException as e:
-        result["requests"] = kanidm.requests
-        result["responses"] = kanidm.responses
+        result["requests"] = kanidm.api.requests
+        result["responses"] = kanidm.api.responses
         result["message"] = "failed"
         module.fail_json(msg=e.message, **result)
     except KanidmModuleError as e:
-        result["requests"] = kanidm.requests
-        result["responses"] = kanidm.responses
+        result["requests"] = kanidm.api.requests
+        result["responses"] = kanidm.api.responses
         result["message"] = "failed"
         module.fail_json(msg=e.message, **result)
     except KanidmApiError as e:
-        result["requests"] = kanidm.requests
-        result["responses"] = kanidm.responses
+        result["requests"] = kanidm.api.requests
+        result["responses"] = kanidm.api.responses
         result["message"] = "failed"
         module.fail_json(msg=e.message, **result)
     except KanidmUnexpectedError as e:
-        result["requests"] = kanidm.requests
-        result["responses"] = kanidm.responses
+        result["requests"] = kanidm.api.requests
+        result["responses"] = kanidm.api.responses
         result["message"] = "failed"
         module.fail_json(msg=e.message, **result)
     except Exception as e:
-        result["requests"] = kanidm.requests
-        result["responses"] = kanidm.responses
+        result["requests"] = kanidm.api.requests
+        result["responses"] = kanidm.api.responses
         result["message"] = "failed"
         module.fail_json(msg=KanidmUnexpectedError(f"{e}").message, **result)
 
     result["message"] = "success"
     result["changed"] = True
-    result["requests"] = kanidm.requests
-    result["responses"] = kanidm.responses
+    result["requests"] = kanidm.api.requests
+    result["responses"] = kanidm.api.responses
 
     # in the event of a successful module execution, you will want to
     # simple AnsibleModule.exit_json(), passing the key/value results

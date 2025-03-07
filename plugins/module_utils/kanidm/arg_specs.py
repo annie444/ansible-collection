@@ -984,8 +984,8 @@ class KanidmOauthArgs:
 class KanidmGroupArgs:
     name: str
     users: List[str]
-    parent: Optional[str] = None
     kanidm: KanidmConf
+    parent: Optional[str] = None
     debug: bool = False
 
     def __init__(self, **kwargs):
