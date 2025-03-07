@@ -25,6 +25,7 @@ from ansible.module_utils.compat.typing import (
     TypedDict,
     Iterable,
 )
+import time
 
 
 REQUESTS_IMP_ERR = None
@@ -417,6 +418,7 @@ class KanidmGroup(object):
             )
 
         if not self.get_group():
+            time.sleep(1)
             if not self.make_group():
                 raise KanidmModuleError(
                     f"Unable to create or get group {self.args.name}. Got {self.api.error}"
@@ -436,10 +438,18 @@ class KanidmGroup(object):
         if self.args.name is None:
             raise KanidmRequiredOptionError("No name specified")
 
-        return self.api.get(
+        self.api.get(
             name="get_group",
             path=f"/v1/group/{self.args.name}",
         )
+
+        try:
+            self.api.text = self.api.json["attrs"]["uuid"]
+        except Exception:
+            self.api.text = ""
+            return False
+
+        return True
 
     def make_group(self) -> bool:
         if self.args.name is None:

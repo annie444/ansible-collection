@@ -144,7 +144,7 @@ class TestKanidmGroupModule(unittest.TestCase):
                         "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
                         "verify_ca": False,
                     },
-                    "name": "test_auth",
+                    "name": "test_auth_group",
                     "users": ["user1", "user2"],
                 }
             )
@@ -164,7 +164,7 @@ class TestKanidmGroupModule(unittest.TestCase):
                         "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
                         "verify_ca": False,
                     },
-                    "name": "test_auth",
+                    "name": "test_repeat_group",
                     "users": ["user1", "user2"],
                 }
             )
@@ -183,7 +183,7 @@ class TestKanidmGroupModule(unittest.TestCase):
                         "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
                         "verify_ca": False,
                     },
-                    "name": "test_auth",
+                    "name": "test_repeat_group",
                     "users": ["user1", "user2", "user3"],
                 }
             )
@@ -197,9 +197,9 @@ class TestKanidmGroupModule(unittest.TestCase):
         with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
-                    "name": "all_args",
+                    "name": "test_all_args",
                     "users": ["user1", "user2"],
-                    "parent": "idm_admins",
+                    "parent": "idm_mail_servers",
                     "kanidm": {
                         "uri": "https://localhost:8443",
                         "username": "idm_admin",
