@@ -1007,6 +1007,12 @@ class KanidmGroupArgs:
                 self.users = Verify(kwargs.get("users"), "users").verify_list_str()
             else:
                 raise KanidmRequiredOptionError("users is required")
+            if "kanidm" in kwargs:
+                self.kanidm = KanidmConf(
+                    **Verify(kwargs.get("kanidm"), "kanidm").verify_dict()
+                )
+            else:
+                raise KanidmRequiredOptionError("kanidm is required")
         except TypeError as e:
             raise KanidmArgsException(str(e), e)
         except ValueError as e:
@@ -1042,7 +1048,7 @@ class KanidmGroupArgs:
             },
             "parent": {
                 "type": OptionType("str"),
-                "required": True,
+                "required": False,
                 "description": "The parent group of the group.",
             },
             "users": {

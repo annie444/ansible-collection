@@ -416,6 +416,69 @@ class KanidmGroup(object):
                 "Unable to establish an authenticated connection with the kanidm server"
             )
 
+        if not self.get_group():
+            if not self.make_group():
+                raise KanidmModuleError(
+                    f"Unable to create or get group {self.args.name}. Got {self.api.error}"
+                )
+
+        if not self.get_group():
+            raise KanidmModuleError(
+                f"Unable to get group {self.args.name}. Got {self.api.error}"
+            )
+
+        if not self.add_members():
+            raise KanidmModuleError(
+                f"Unable to add members to group {self.args.name}. Got {self.api.error}"
+            )
+
+    def get_group(self) -> bool:
+        if self.args.name is None:
+            raise KanidmRequiredOptionError("No name specified")
+
+        return self.api.get(
+            name="get_group",
+            path=f"/v1/group/{self.args.name}",
+        )
+
+    def make_group(self) -> bool:
+        if self.args.name is None:
+            raise KanidmRequiredOptionError("No name specified")
+
+        if self.args.parent is not None:
+            return self.api.post(
+                name="create_group",
+                path="/v1/group",
+                json={
+                    "attrs": {
+                        "name": [self.args.name],
+                        "entry_managed_by": [self.args.parent],
+                    }
+                },
+            )
+        else:
+            return self.api.post(
+                name="create_group",
+                path="/v1/group",
+                json={
+                    "attrs": {
+                        "name": [self.args.name],
+                    }
+                },
+            )
+
+    def add_members(self) -> bool:
+        if self.args.name is None:
+            raise KanidmRequiredOptionError("No name specified")
+        if self.args.users is None:
+            raise KanidmRequiredOptionError("No users specified")
+
+        return self.api.post(
+            name="add_members",
+            path=f"/v1/group/{self.args.name}/_attr/member",
+            json=self.args.users,
+        )
+
 
 class KanidmOAuth(object):
     def __init__(self, args: KanidmOauthArgs):
