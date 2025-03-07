@@ -1,3 +1,4 @@
+
 class ModuleDocFragment(object):
     DOCUMENTATION = r"""
     options:
@@ -221,4 +222,6 @@ class ModuleDocFragment(object):
         default: false
         required: false
         description: Enable debug mode.
+      
     """
+            

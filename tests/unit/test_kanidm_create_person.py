@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 from datetime import datetime
 
-from ansible_collections.annie444.base.plugins.modules import kanidm_create_group
+from ansible_collections.annie444.base.plugins.modules import kanidm_create_person
 
 from unittest.mock import patch
 from ansible.module_utils import basic
@@ -119,7 +119,7 @@ def fail_json(*args, **kwargs):
     raise AnsibleFailJson(kwargs)
 
 
-class TestKanidmGroupModule(unittest.TestCase):
+class TestKanidmPersonModule(unittest.TestCase):
     def setUp(self):
         self.mock_module_helper = patch.multiple(
             basic.AnsibleModule,
@@ -132,7 +132,7 @@ class TestKanidmGroupModule(unittest.TestCase):
     def test_module_fail_when_required_args_missing(self):
         with self.assertRaises(AnsibleFailJson):
             set_module_args({})
-            kanidm_create_group.main()
+            kanidm_create_person.main()
 
     def test_kanidm_auth_succeeds(self):
         with self.assertRaises(AnsibleExitJson) as ej:
@@ -144,16 +144,17 @@ class TestKanidmGroupModule(unittest.TestCase):
                         "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
                         "verify_ca": False,
                     },
-                    "name": "test_auth_group",
-                    "users": ["user1", "user2"],
+                    "name": "test_auth_user",
+                    "display_name": "Test Auth User",
                 }
             )
-            kanidm_create_group.main()
+            kanidm_create_person.main()
         raised = ej.exception
         self.assertEqual(raised.data["changed"], True)
+        self.assertIsInstance(raised.data["reset_url"], str)
         self.assertEqual(raised.data["message"].lower(), "success")
 
-    def test_kanidm_updates_users_if_exists(self):
+    def test_kanidm_updates_person_if_exists(self):
         with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
@@ -163,13 +164,13 @@ class TestKanidmGroupModule(unittest.TestCase):
                         "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
                         "verify_ca": False,
                     },
-                    "name": "test_repeat_group",
-                    "users": ["user1", "user2"],
+                    "name": "test_repeat_user",
                 }
             )
-            kanidm_create_group.main()
+            kanidm_create_person.main()
         raised = ej.exception
         self.assertEqual(raised.data["changed"], True)
+        self.assertTrue(len(raised.data["reset_url"]) > 0)
         self.assertEqual(raised.data["message"].lower(), "success")
 
         with self.assertRaises(AnsibleExitJson) as ej:
@@ -181,22 +182,22 @@ class TestKanidmGroupModule(unittest.TestCase):
                         "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
                         "verify_ca": False,
                     },
-                    "name": "test_repeat_group",
-                    "users": ["user1", "user2", "user3"],
+                    "name": "test_repeat_user",
                 }
             )
-            kanidm_create_group.main()
+            kanidm_create_person.main()
         raised = ej.exception
         self.assertEqual(raised.data["changed"], True)
+        self.assertIsInstance(raised.data["reset_url"], str)
         self.assertEqual(raised.data["message"].lower(), "success")
 
-    def test_kanidm_group_all_args(self):
+    def test_kanidm_person_all_args(self):
         with self.assertRaises(AnsibleExitJson) as ej:
             set_module_args(
                 {
-                    "name": "test_all_args",
-                    "users": ["user1", "user2"],
-                    "parent": "idm_mail_servers",
+                    "name": "test_user_with_all_args",
+                    "display_name": "User with All Args",
+                    "ttl": 60,
                     "kanidm": {
                         "uri": "https://localhost:8443",
                         "username": "idm_admin",
@@ -205,7 +206,8 @@ class TestKanidmGroupModule(unittest.TestCase):
                     },
                 }
             )
-            kanidm_create_group.main()
+            kanidm_create_person.main()
         raised = ej.exception
         self.assertEqual(raised.data["changed"], True)
+        self.assertTrue(len(raised.data["reset_url"]) > 0)
         self.assertEqual(raised.data["message"].lower(), "success")

@@ -19,4 +19,6 @@ class ModuleDocFragment(object):
         default: auto
         required: false
         description: The format of the image. Defaults to auto.
+      
     """
+

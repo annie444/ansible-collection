@@ -20,4 +20,6 @@ class ModuleDocFragment(object):
         - ssh_publickeys
         required: true
         description: The additional scopes for the group.
+      
     """
+

@@ -47,10 +47,6 @@ class OptionType(StrEnum):  # type: ignore
     def __repr__(self):
         return self.value
 
-    @classmethod
-    def documentation(cls) -> str:
-        return str(cls.value)
-
 
 class AnsiblePluginTypes(StrEnum):  # type: ignore
     LOOKUP = "lookup"
@@ -79,10 +75,6 @@ class AnsiblePluginTypes(StrEnum):  # type: ignore
     def __repr__(self):
         return self.value
 
-    @classmethod
-    def documentation(cls) -> str:
-        return str(cls.value)
-
 
 class AnsibleModuleSupport(StrEnum):  # type: ignore
     FULL = "full"
@@ -95,10 +87,6 @@ class AnsibleModuleSupport(StrEnum):  # type: ignore
 
     def __repr__(self):
         return self.value
-
-    @classmethod
-    def documentation(cls) -> str:
-        return str(cls.value)
 
 
 T = TypeVar("T")

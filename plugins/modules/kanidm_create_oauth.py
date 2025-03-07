@@ -82,21 +82,25 @@ responses:
 
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
 from ansible.module_utils.basic import missing_required_lib  # pylint: disable=E0401  # noqa: E402
-from ..module_utils.kanidm.arg_specs import (  # pylint: disable=E0401  # noqa: E402
+from ..module_utils.kanidm.arg_specs.oauth import (  # pylint: disable=E0401  # noqa: E402
     KanidmOauthArgs,
-    HAS_REQUESTS as ARGS_HAS_REQ,
-    REQUESTS_IMP_ERR as ARGS_REQ_IMP_ERR,
     HAS_YAML,
     YAML_IMP_ERR,
     HAS_ENUM,
     STR_ENUM_IMP_ERR,
 )
-from ..module_utils.kanidm.runner import (  # pylint: disable=E0401  # noqa: E402
+from ..module_utils.kanidm.arg_specs.oauth_sub import (  # pylint: disable=E0401  # noqa: E402
+    HAS_REQUESTS as ARGS_HAS_REQ,
+    REQUESTS_IMP_ERR as ARGS_REQ_IMP_ERR,
+)
+from ..module_utils.kanidm.runner.oauth import (  # pylint: disable=E0401  # noqa: E402
     KanidmOAuth,
-    HAS_REQUESTS as RUN_HAS_REQ,
-    REQUESTS_IMP_ERR as RUN_REQ_IMP_ERR,
     HAS_REQUESTS_TOOLS,
     REQUESTS_TOOLS_IMP_ERR,
+)
+from ..module_utils.kanidm.runner.api import (  # pylint: disable=E0401  # noqa: E402
+    HAS_REQUESTS as RUN_HAS_REQ,
+    REQUESTS_IMP_ERR as RUN_REQ_IMP_ERR,
 )
 from ..module_utils.kanidm.exceptions import (  # pylint: disable=E0401  # noqa: E402
     KanidmApiError,
