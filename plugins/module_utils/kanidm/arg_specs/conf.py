@@ -1,7 +1,8 @@
 from __future__ import absolute_import, annotations, division, print_function
 
-from dataclasses import dataclass
 import traceback
+
+from dataclasses import dataclass
 from pathlib import Path
 
 from ansible.module_utils.compat.typing import FrozenSet, Optional
@@ -16,6 +17,7 @@ from ..exceptions import (
     KanidmArgsException,
     KanidmRequiredOptionError,
 )
+
 
 STR_ENUM_IMP_ERR = None
 try:
@@ -64,25 +66,30 @@ class KanidmConf:
                 self.token = Verify(kwargs.get("token"), "token").verify_opt_str()
             if "ca_path" in kwargs:
                 self.ca_path = Verify(
-                    kwargs.get("ca_path"), "ca_path"
+                    kwargs.get("ca_path"),
+                    "ca_path",
                 ).verify_opt_path()
             if "username" in kwargs:
                 self.username = Verify(
-                    kwargs.get("username"), "username"
+                    kwargs.get("username"),
+                    "username",
                 ).verify_opt_str()
             if "password" in kwargs:
                 self.password = kwargs.get("password")
             if "ca_cert_data" in kwargs:
                 self.ca_path = Verify(
-                    kwargs.get("ca_cert_data"), "ca_cert_data"
+                    kwargs.get("ca_cert_data"),
+                    "ca_cert_data",
                 ).verify_opt_content_as_path()
             if "verify_ca" in kwargs:
                 self.verify_ca = Verify(
-                    kwargs.get("verify_ca"), "verify_ca"
+                    kwargs.get("verify_ca"),
+                    "verify_ca",
                 ).verify_default_bool(True)
             if "connect_timeout" in kwargs:
                 self.connect_timeout = Verify(
-                    kwargs.get("connect_timeout"), "connect_timeout"
+                    kwargs.get("connect_timeout"),
+                    "connect_timeout",
                 ).verify_default_int(30)
         except TypeError as e:
             raise KanidmArgsException(str(e), e)
@@ -121,7 +128,7 @@ class KanidmConf:
                 "ca_cert_data",
                 "verify_ca",
                 "connect_timeout",
-            ]
+            ],
         )
 
     @staticmethod

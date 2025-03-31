@@ -1,15 +1,16 @@
 import json
-import unittest
 import os
-from pathlib import Path
 import sys
+import unittest
+
 from datetime import datetime
-
-from ansible_collections.annie444.base.plugins.modules import kanidm_create_group
-
+from pathlib import Path
 from unittest.mock import patch
+
 from ansible.module_utils import basic
 from ansible.module_utils.common.text.converters import to_bytes
+
+from ansible_collections.annie444.base.plugins.modules import kanidm_create_group
 
 
 test_name = "create_group"
@@ -146,7 +147,7 @@ class TestKanidmGroupModule(unittest.TestCase):
                     },
                     "name": "test_auth_group",
                     "users": ["user1", "user2"],
-                }
+                },
             )
             kanidm_create_group.main()
         raised = ej.exception
@@ -165,7 +166,7 @@ class TestKanidmGroupModule(unittest.TestCase):
                     },
                     "name": "test_repeat_group",
                     "users": ["user1", "user2"],
-                }
+                },
             )
             kanidm_create_group.main()
         raised = ej.exception
@@ -183,7 +184,7 @@ class TestKanidmGroupModule(unittest.TestCase):
                     },
                     "name": "test_repeat_group",
                     "users": ["user1", "user2", "user3"],
-                }
+                },
             )
             kanidm_create_group.main()
         raised = ej.exception
@@ -203,7 +204,7 @@ class TestKanidmGroupModule(unittest.TestCase):
                         "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
                         "verify_ca": False,
                     },
-                }
+                },
             )
             kanidm_create_group.main()
         raised = ej.exception

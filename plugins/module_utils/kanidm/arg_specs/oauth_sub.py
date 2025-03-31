@@ -1,11 +1,12 @@
 from __future__ import absolute_import, annotations, division, print_function
 
-from dataclasses import dataclass
-import traceback
 import tempfile
+import traceback
+
+from dataclasses import dataclass
 from pathlib import Path
 
-from ansible.module_utils.compat.typing import FrozenSet, Optional, List
+from ansible.module_utils.compat.typing import FrozenSet, List, Optional
 
 from ...ansible_specs import (
     AnsibleArgumentSpec,
@@ -18,6 +19,7 @@ from ..exceptions import (
     KanidmModuleError,
     KanidmRequiredOptionError,
 )
+
 
 STR_ENUM_IMP_ERR = None
 try:
@@ -137,7 +139,8 @@ class SupScope:
         try:
             if "group" in kwargs:
                 self.group = Verify(
-                    kwargs.get("group"), "sup_scopesp[].group"
+                    kwargs.get("group"),
+                    "sup_scopesp[].group",
                 ).verify_str()
             else:
                 raise KanidmRequiredOptionError("sup_scopesp[].group not defined")
@@ -145,7 +148,8 @@ class SupScope:
                 self.scopes = [
                     Scope(s)
                     for s in Verify(
-                        kwargs.get("scopes"), "sup_scopesp[].scopes"
+                        kwargs.get("scopes"),
+                        "sup_scopesp[].scopes",
                     ).verify_list_str()
                 ]
             else:
@@ -206,19 +210,22 @@ class CustomClaim:
         try:
             if "name" in kwargs:
                 self.name = Verify(
-                    kwargs.get("name"), "custom_claims[].name"
+                    kwargs.get("name"),
+                    "custom_claims[].name",
                 ).verify_str()
             else:
                 raise KanidmRequiredOptionError("custom_claims[].name not defined")
             if "group" in kwargs:
                 self.group = Verify(
-                    kwargs.get("group"), "custom_claims[].group"
+                    kwargs.get("group"),
+                    "custom_claims[].group",
                 ).verify_str()
             else:
                 raise KanidmRequiredOptionError("custom_claims[].group not defined")
             if "values" in kwargs:
                 self.values = Verify(
-                    kwargs.get("values"), "custom_claims[].values"
+                    kwargs.get("values"),
+                    "custom_claims[].values",
                 ).verify_list_str()
             else:
                 raise KanidmRequiredOptionError("custom_claims[].values not defined")
@@ -286,7 +293,7 @@ class Image:
                 raise KanidmRequiredOptionError("image.src is not defined")
             if "format" in kwargs:
                 self.format = ImageFormat(
-                    Verify(kwargs.get("format"), "image.format").verify_str()
+                    Verify(kwargs.get("format"), "image.format").verify_str(),
                 )
             else:
                 raise KanidmRequiredOptionError("image.format is not defined")
@@ -406,8 +413,7 @@ class Image:
                 or header[0:4] == [b"\xff", b"\xd8", b"\xff", b"\xee"]
                 or (
                     header[0:4] == [b"\xff", b"\xd8", b"\xff", b"\xe1"]
-                    and header[6:10]
-                    == [b"\x45", b"\x78", b"\x69", b"\x66", b"\x00", b"\x00"]
+                    and header[6:10] == [b"\x45", b"\x78", b"\x69", b"\x66", b"\x00", b"\x00"]
                 )
                 or header[0:4] == [b"\xff", b"\xd8", b"\xff", b"\xe0"]
                 or header[0:12]
@@ -436,12 +442,17 @@ class Image:
                 b"\x38",
                 b"\x37",
                 b"\x61",
-            ] or header[0:6] == [b"\x47", b"\x49", b"\x46", b"\x38", b"\x39", b"\x61"]:
+            ] or header[
+                0:6
+            ] == [b"\x47", b"\x49", b"\x46", b"\x38", b"\x39", b"\x61"]:
                 self.format = ImageFormat.gif
 
-            elif header[0:4] == [b"\x52", b"\x49", b"\x46", b"\x46"] and header[
-                8:12
-            ] == [b"\x57", b"\x45", b"\x42", b"\x50"]:
+            elif header[0:4] == [b"\x52", b"\x49", b"\x46", b"\x46"] and header[8:12] == [
+                b"\x57",
+                b"\x45",
+                b"\x42",
+                b"\x50",
+            ]:
                 self.format = ImageFormat.webp
 
             else:

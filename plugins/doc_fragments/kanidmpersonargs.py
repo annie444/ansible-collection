@@ -77,6 +77,5 @@ class ModuleDocFragment(object):
         default: false
         required: false
         description: Enable debug mode.
-      
-    """
 
+    """

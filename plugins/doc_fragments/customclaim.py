@@ -18,6 +18,5 @@ class ModuleDocFragment(object):
         elements: str
         required: true
         description: The values for the custom claim.
-      
-    """
 
+    """
