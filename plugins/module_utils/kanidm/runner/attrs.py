@@ -1,8 +1,10 @@
 ### Because consistency is great!
 ###
 
-from datetime import timedelta
 import os
+
+from datetime import timedelta
+
 
 ## The default location for the `kanidm` CLI tool's token cache.
 CLIENT_TOKEN_CACHE: str = "~/.cache/kanidm_tokens"
@@ -149,9 +151,7 @@ ATTR_NO_INDEX: str = "no-index"
 ATTR_NSACCOUNTLOCK: str = "nsaccountlock"
 ATTR_NSUNIQUEID: str = "nsuniqueid"
 
-ATTR_OAUTH2_ALLOW_INSECURE_CLIENT_DISABLE_PKCE: str = (
-    "oauth2_allow_insecure_client_disable_pkce"
-)
+ATTR_OAUTH2_ALLOW_INSECURE_CLIENT_DISABLE_PKCE: str = "oauth2_allow_insecure_client_disable_pkce"
 ATTR_OAUTH2_ALLOW_LOCALHOST_REDIRECT: str = "oauth2_allow_localhost_redirect"
 ATTR_OAUTH2_CONSENT_SCOPE_MAP: str = "oauth2_consent_scope_map"
 ATTR_OAUTH2_DEVICE_FLOW_ENABLE: str = "oauth2_device_flow_enable"

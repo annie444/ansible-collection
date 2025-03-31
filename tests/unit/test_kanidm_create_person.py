@@ -1,15 +1,16 @@
 import json
-import unittest
 import os
-from pathlib import Path
 import sys
+import unittest
+
 from datetime import datetime
-
-from ansible_collections.annie444.base.plugins.modules import kanidm_create_person
-
+from pathlib import Path
 from unittest.mock import patch
+
 from ansible.module_utils import basic
 from ansible.module_utils.common.text.converters import to_bytes
+
+from ansible_collections.annie444.base.plugins.modules import kanidm_create_person
 
 
 test_name = "create_group"
@@ -146,7 +147,7 @@ class TestKanidmPersonModule(unittest.TestCase):
                     },
                     "name": "test_auth_user",
                     "display_name": "Test Auth User",
-                }
+                },
             )
             kanidm_create_person.main()
         raised = ej.exception
@@ -165,7 +166,7 @@ class TestKanidmPersonModule(unittest.TestCase):
                         "verify_ca": False,
                     },
                     "name": "test_repeat_user",
-                }
+                },
             )
             kanidm_create_person.main()
         raised = ej.exception
@@ -183,7 +184,7 @@ class TestKanidmPersonModule(unittest.TestCase):
                         "verify_ca": False,
                     },
                     "name": "test_repeat_user",
-                }
+                },
             )
             kanidm_create_person.main()
         raised = ej.exception
@@ -204,7 +205,7 @@ class TestKanidmPersonModule(unittest.TestCase):
                         "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
                         "verify_ca": False,
                     },
-                }
+                },
             )
             kanidm_create_person.main()
         raised = ej.exception

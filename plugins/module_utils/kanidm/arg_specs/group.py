@@ -1,9 +1,10 @@
 from __future__ import absolute_import, annotations, division, print_function
 
-from dataclasses import dataclass
 import traceback
 
-from ansible.module_utils.compat.typing import FrozenSet, Optional, List
+from dataclasses import dataclass
+
+from ansible.module_utils.compat.typing import FrozenSet, List, Optional
 
 from ...ansible_specs import (
     AnsibleArgumentSpec,
@@ -16,6 +17,7 @@ from ..exceptions import (
     KanidmRequiredOptionError,
 )
 from .conf import KanidmConf
+
 
 STR_ENUM_IMP_ERR = None
 try:
@@ -72,7 +74,7 @@ class KanidmGroupArgs:
                 raise KanidmRequiredOptionError("users is required")
             if "kanidm" in kwargs:
                 self.kanidm = KanidmConf(
-                    **Verify(kwargs.get("kanidm"), "kanidm").verify_dict()
+                    **Verify(kwargs.get("kanidm"), "kanidm").verify_dict(),
                 )
             else:
                 raise KanidmRequiredOptionError("kanidm is required")
@@ -144,11 +146,7 @@ class KanidmGroupArgs:
             for values in enumerate(kanidm_full_spec["mutually_exclusive"]):
                 mutually_exclusive.append([])
                 for item in values:
-                    if (
-                        isinstance(item, list)
-                        or isinstance(item, tuple)
-                        or isinstance(item, set)
-                    ):
+                    if isinstance(item, list) or isinstance(item, tuple) or isinstance(item, set):
                         for v in item:
                             mutually_exclusive[-1].append(f"kanidm.{v}")
                     else:

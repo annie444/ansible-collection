@@ -1,15 +1,18 @@
 from __future__ import annotations, division
+
+import traceback
+
 from ansible.module_utils.compat.typing import (
     Callable,
-    TypedDict,
-    List,
     Dict,
-    Tuple,
-    TypeVar,
+    List,
     NotRequired,
+    Tuple,
+    TypedDict,
+    TypeVar,
     Union,
 )
-import traceback
+
 
 STR_ENUM_IMP_ERR = None
 try:

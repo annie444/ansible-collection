@@ -1,32 +1,35 @@
 from __future__ import absolute_import, annotations, division, print_function
 
+import json
+import traceback
+
+from ansible.module_utils.compat.typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TypedDict,
+)
+
 from ..arg_specs.conf import (
     KanidmConf,
 )
 from ..exceptions import (
+    KanidmArgsException,
     KanidmAuthenticationFailure,
     KanidmRequiredOptionError,
-    KanidmArgsException,
 )
-import json
-import traceback
-from ansible.module_utils.compat.typing import (
-    Callable,
-    Optional,
-    Dict,
-    Any,
-    Set,
-    List,
-    Tuple,
-    TypedDict,
-    Iterable,
-)
+
 
 REQUESTS_IMP_ERR = None
 try:
-    from requests.sessions import Session
+    from requests import PreparedRequest, Request, Response
     from requests.auth import AuthBase
-    from requests import Response, PreparedRequest, Request
+    from requests.sessions import Session
 
     HAS_REQUESTS = True
 except ImportError:
@@ -81,8 +84,8 @@ def from_prep_req(req: PreparedRequest) -> RequestDict:
                 "headers": headers,
                 "method": method,
                 "url": url,
-            }
-        )
+            },
+        ),
     )
 
 
@@ -150,9 +153,7 @@ def from_resp(res: Response) -> ResponseDict:
             {
                 "cookies": cookies,
                 "elapsed": elapsed,
-                "encoding": res.encoding
-                if res.encoding is not None
-                else res.apparent_encoding,
+                "encoding": res.encoding if res.encoding is not None else res.apparent_encoding,
                 "headers": headers,
                 "redirect": res.is_redirect,
                 "json": js,
@@ -160,8 +161,8 @@ def from_resp(res: Response) -> ResponseDict:
                 "status_code": res.status_code,
                 "text": text,
                 "url": res.url,
-            }
-        )
+            },
+        ),
     )
 
 
@@ -188,19 +189,17 @@ class KanidmApi(object):
         self.json: Dict = {}
         self.token: str | None = None
         self.text: str = ""
-        self.process_request: Callable[[PreparedRequest], str | RequestDict] = (
-            process_request[debug]
-        )
-        self.process_response: Callable[[Response], str | ResponseDict] = (
-            process_response[debug]
-        )
+        self.process_request: Callable[[PreparedRequest], str | RequestDict] = process_request[
+            debug
+        ]
+        self.process_response: Callable[[Response], str | ResponseDict] = process_response[debug]
         self.requests: Dict[str, RequestDict | str] = {}
         self.responses: Dict[str, ResponseDict | str] = {}
         self.session.verify = self.args.verify_ca
         if self.args.ca_path is not None:
             if self.args.ca_path.is_file():
                 self.session.verify = str(
-                    self.args.ca_path.expanduser().absolute().parent
+                    self.args.ca_path.expanduser().absolute().parent,
                 )
             else:
                 self.session.verify = str(self.args.ca_path.expanduser().absolute())
@@ -215,9 +214,7 @@ class KanidmApi(object):
 
     @property
     def error(self) -> str:
-        return (
-            f"{self.response.status_code} {self.response.reason} {self.response.text}"
-        )
+        return f"{self.response.status_code} {self.response.reason} {self.response.text}"
 
     def verify_response(self) -> bool:
         if self.response.status_code < 200 or self.response.status_code >= 300:
@@ -279,34 +276,26 @@ class KanidmApi(object):
         self.responses[name] = self.process_response(self.response)
 
     def authenticate(self):
-        if self.args.token is None and (
-            self.args.username is None or self.args.password is None
-        ):
+        if self.args.token is None and (self.args.username is None or self.args.password is None):
             raise KanidmRequiredOptionError("No authentication method specified")
         if self.args.token is not None and self.check_token():
             return
-        elif (
-            self.args.username is not None and self.args.password is not None
-        ) and self.login():
+        elif (self.args.username is not None and self.args.password is not None) and self.login():
             return
         else:
             raise KanidmAuthenticationFailure(
-                f"Authentication failed: {self.response.status_code} {self.response.reason} {self.response.text}"
+                f"Authentication failed: {self.response.status_code} {self.response.reason} {self.response.text}",
             )
 
     def check_token(self) -> bool:
         if (
             self.args.token is None
             and not isinstance(self.session.auth, BearerAuth)
-            and (
-                isinstance(self.session.auth, BearerAuth)
-                and self.session.auth.token is None
-            )
+            and (isinstance(self.session.auth, BearerAuth) and self.session.auth.token is None)
         ):
             raise KanidmArgsException("No token specified")
         if self.args.token is not None and (
-            not isinstance(self.session.auth, BearerAuth)
-            or self.session.auth.token is None
+            not isinstance(self.session.auth, BearerAuth) or self.session.auth.token is None
         ):
             self.session.auth = BearerAuth(self.args.token)
 
@@ -325,8 +314,8 @@ class KanidmApi(object):
                         "username": self.args.username,
                         "issue": "token",
                         "privileged": True,
-                    }
-                }
+                    },
+                },
             },
         ):
             return False
@@ -344,7 +333,7 @@ class KanidmApi(object):
             json={
                 "step": {
                     "begin": "password",
-                }
+                },
             },
         ):
             return False
@@ -363,8 +352,8 @@ class KanidmApi(object):
                 "step": {
                     "cred": {
                         "password": self.args.password,
-                    }
-                }
+                    },
+                },
             },
         ):
             return False
@@ -378,7 +367,10 @@ class KanidmApi(object):
         return True
 
     def patch_oauth(
-        self, name: str, oauth_name: str, attrs: Dict[str, List[str]]
+        self,
+        name: str,
+        oauth_name: str,
+        attrs: Dict[str, List[str]],
     ) -> bool:
         return self.patch(
             name=name,

@@ -9,7 +9,7 @@ from ..exceptions import (
     KanidmRequiredOptionError,
 )
 from .api import KanidmApi
-from .attrs import ATTR_NAME, ATTR_UUID, ATTR_ENTRY_MANAGED_BY, ATTR_MEMBER
+from .attrs import ATTR_ENTRY_MANAGED_BY, ATTR_MEMBER, ATTR_NAME, ATTR_UUID
 
 
 class KanidmGroup(object):
@@ -22,23 +22,23 @@ class KanidmGroup(object):
 
         if not self.api.check_token():
             raise KanidmAuthenticationFailure(
-                "Unable to establish an authenticated connection with the kanidm server"
+                "Unable to establish an authenticated connection with the kanidm server",
             )
 
         if not self.get_group():
             if not self.make_group():
                 raise KanidmModuleError(
-                    f"Unable to create or get group {self.args.name}. Got {self.api.error}"
+                    f"Unable to create or get group {self.args.name}. Got {self.api.error}",
                 )
 
         if not self.get_group():
             raise KanidmModuleError(
-                f"Unable to get group {self.args.name}. Got {self.api.error}"
+                f"Unable to get group {self.args.name}. Got {self.api.error}",
             )
 
         if not self.add_members():
             raise KanidmModuleError(
-                f"Unable to add members to group {self.args.name}. Got {self.api.error}"
+                f"Unable to add members to group {self.args.name}. Got {self.api.error}",
             )
 
     def get_group(self) -> bool:
@@ -70,7 +70,7 @@ class KanidmGroup(object):
                     "attrs": {
                         ATTR_NAME: [self.args.name],
                         ATTR_ENTRY_MANAGED_BY: [self.args.parent],
-                    }
+                    },
                 },
             )
         else:
@@ -80,7 +80,7 @@ class KanidmGroup(object):
                 json={
                     "attrs": {
                         ATTR_NAME: [self.args.name],
-                    }
+                    },
                 },
             )
 

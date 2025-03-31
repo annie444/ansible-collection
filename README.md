@@ -3,6 +3,15 @@
 This repository contains the `annie444.base` Ansible Collection.
 
 <!--start requires_ansible-->
+## Ansible version compatibility
+
+This collection has been tested against following Ansible versions: **>=2.15.0**.
+
+For collections that support Ansible 2.9, please ensure you update your `network_os` to use the
+fully qualified collection name (for example, `cisco.ios.ios`).
+Plugins and modules within a collection may be tested with only specific Ansible versions.
+A collection may contain metadata that identifies these versions.
+PEP440 is the schema used to describe the versions of Ansible.
 <!--end requires_ansible-->
 
 ## External requirements
@@ -12,6 +21,23 @@ Some modules and plugins require external libraries. Please check the requiremen
 ## Included content
 
 <!--start collection content-->
+### Filter plugins
+Name | Description
+--- | ---
+[annie444.base.hello_world](https://github.com/annie444/ansible-collection/blob/main/docs/annie444.base.hello_world_filter.rst)|A custom filter plugin for Ansible.
+
+### Lookup plugins
+Name | Description
+--- | ---
+[annie444.base.hello_world](https://github.com/annie444/ansible-collection/blob/main/docs/annie444.base.hello_world_lookup.rst)|A custom lookup plugin for Ansible.
+
+### Modules
+Name | Description
+--- | ---
+[annie444.base.kanidm_create_group](https://github.com/annie444/ansible-collection/blob/main/docs/annie444.base.kanidm_create_group_module.rst)|Create a Group in kanidm.
+[annie444.base.kanidm_create_oauth](https://github.com/annie444/ansible-collection/blob/main/docs/annie444.base.kanidm_create_oauth_module.rst)|Create an OAuth client in kanidm.
+[annie444.base.kanidm_create_person](https://github.com/annie444/ansible-collection/blob/main/docs/annie444.base.kanidm_create_person_module.rst)|Create a Person in kanidm.
+
 <!--end collection content-->
 
 ## Using this collection

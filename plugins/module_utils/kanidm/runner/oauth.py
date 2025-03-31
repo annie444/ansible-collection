@@ -1,12 +1,18 @@
 from __future__ import absolute_import, annotations, division, print_function
 
+import traceback
+
+from ansible.module_utils.compat.typing import (
+    Optional,
+)
+
 from ..arg_specs.oauth import KanidmOauthArgs
 from ..arg_specs.oauth_sub import PrefUsername
 from ..exceptions import (
+    KanidmArgsException,
     KanidmAuthenticationFailure,
     KanidmModuleError,
     KanidmRequiredOptionError,
-    KanidmArgsException,
 )
 from .api import KanidmApi
 from .attrs import (
@@ -21,14 +27,11 @@ from .attrs import (
     ATTR_OAUTH2_STRICT_REDIRECT_URI,
     ATTR_UUID,
 )
-import traceback
-from ansible.module_utils.compat.typing import (
-    Optional,
-)
+
 
 REQUESTS_TOOLS_IMP_ERR = None
 try:
-    from requests_toolbelt.multipart.encoder import MultipartEncoder, FileWrapper
+    from requests_toolbelt.multipart.encoder import FileWrapper, MultipartEncoder
 
     HAS_REQUESTS_TOOLS = True
 except ImportError:
@@ -46,93 +49,93 @@ class KanidmOAuth(object):
 
         if not self.api.check_token():
             raise KanidmAuthenticationFailure(
-                "Unable to establish an authenticated connection with the kanidm server"
+                "Unable to establish an authenticated connection with the kanidm server",
             )
 
         if not self.get_client():
             if not self.args.public:
                 if not self.create_basic_client():
                     raise KanidmModuleError(
-                        f"Unable to create or get client {self.args.name}. Got {self.api.error}"
+                        f"Unable to create or get client {self.args.name}. Got {self.api.error}",
                     )
             else:
                 if not self.create_public_client():
                     raise KanidmModuleError(
-                        f"Unable to create or get public client {self.args.name}. Got {self.api.error}"
+                        f"Unable to create or get public client {self.args.name}. Got {self.api.error}",
                     )
 
         if not self.get_client():
             raise KanidmModuleError(
-                f"Unable to get client {self.args.name}. Got {self.api.error}"
+                f"Unable to get client {self.args.name}. Got {self.api.error}",
             )
 
         if not self.args.public:
             if not self.set_pkce():
                 raise KanidmModuleError(
-                    f"Unable to set PKCE for client {self.args.name}. Got {self.api.error}"
+                    f"Unable to set PKCE for client {self.args.name}. Got {self.api.error}",
                 )
 
             if not self.set_legacy_crypto():
                 raise KanidmModuleError(
-                    f"Unable to set legacy crypto for client {self.args.name}. Got {self.api.error}"
+                    f"Unable to set legacy crypto for client {self.args.name}. Got {self.api.error}",
                 )
         else:
             if not self.set_localhost_redirect():
                 raise KanidmModuleError(
-                    f"Unable to set localhost redirect policy for client {self.args.name}. Got {self.api.error}"
+                    f"Unable to set localhost redirect policy for client {self.args.name}. Got {self.api.error}",
                 )
 
         if not self.add_redirect_urls():
             raise KanidmModuleError(
-                f"Unable to add redirect URLs for client {self.args.name}. Got {self.api.error}"
+                f"Unable to add redirect URLs for client {self.args.name}. Got {self.api.error}",
             )
 
         if not self.update_scope_map():
             raise KanidmModuleError(
-                f"Unable to update scope map for client {self.args.name}. Got {self.api.error}"
+                f"Unable to update scope map for client {self.args.name}. Got {self.api.error}",
             )
 
         if not self.set_preferred_username():
             raise KanidmModuleError(
-                f"Unable to set preferred username for client {self.args.name}. Got {self.api.error}"
+                f"Unable to set preferred username for client {self.args.name}. Got {self.api.error}",
             )
 
         if not self.set_strict_redirect():
             raise KanidmModuleError(
-                f"Unable to set strict redirect for client {self.args.name}. Got {self.api.error}"
+                f"Unable to set strict redirect for client {self.args.name}. Got {self.api.error}",
             )
 
         if self.args.image is not None:
             if not self.add_image():
                 raise KanidmModuleError(
-                    f"Unable to add image for client {self.args.name}. Got {self.api.error}"
+                    f"Unable to add image for client {self.args.name}. Got {self.api.error}",
                 )
 
         if self.args.sup_scopes is not None:
             if not self.update_sup_scope_map():
                 raise KanidmModuleError(
-                    f"Unable to update supplemental scope map for client {self.args.name}. Got {self.api.error}"
+                    f"Unable to update supplemental scope map for client {self.args.name}. Got {self.api.error}",
                 )
 
         if self.args.custom_claims is not None:
             if not self.update_custom_claim_map():
                 raise KanidmModuleError(
-                    f"Unable to update custom claim map for client {self.args.name}. Got {self.api.error}"
+                    f"Unable to update custom claim map for client {self.args.name}. Got {self.api.error}",
                 )
 
             if not self.update_custom_claim_join():
                 raise KanidmModuleError(
-                    f"Unable to update custom claim join for client {self.args.name}. Got {self.api.error}"
+                    f"Unable to update custom claim join for client {self.args.name}. Got {self.api.error}",
                 )
 
         if not self.get_client_secret():
             raise KanidmModuleError(
-                f"Unable to get client secret for client {self.args.name}. Got {self.api.error}"
+                f"Unable to get client secret for client {self.args.name}. Got {self.api.error}",
             )
 
         if self.api.text is None:
             raise KanidmModuleError(
-                f"Unable to parse the client secret for client {self.args.name}. Got {self.api.text}"
+                f"Unable to parse the client secret for client {self.args.name}. Got {self.api.text}",
             )
 
         return self.api.text
@@ -170,16 +173,16 @@ class KanidmOAuth(object):
                     ATTR_DISPLAYNAME: [self.args.display_name],
                     ATTR_OAUTH2_RS_ORIGIN_LANDING: [self.args.url],
                     ATTR_OAUTH2_STRICT_REDIRECT_URI: [
-                        str(self.args.strict_redirect).lower()
+                        str(self.args.strict_redirect).lower(),
                     ],
-                }
+                },
             },
         )
 
     def create_public_client(self) -> bool:
         if not self.args.public:
             raise KanidmArgsException(
-                "Unable to create a public client when public is not specified"
+                "Unable to create a public client when public is not specified",
             )
         if self.args.name is None:
             raise KanidmRequiredOptionError("No name specified")
@@ -195,9 +198,9 @@ class KanidmOAuth(object):
                     ATTR_DISPLAYNAME: [self.args.display_name],
                     ATTR_OAUTH2_RS_ORIGIN_LANDING: [self.args.url],
                     ATTR_OAUTH2_STRICT_REDIRECT_URI: [
-                        str(self.args.strict_redirect).lower()
+                        str(self.args.strict_redirect).lower(),
                     ],
-                }
+                },
             },
         )
 
@@ -253,8 +256,8 @@ class KanidmOAuth(object):
                     f"{self.args.name}.{self.args.image.format.value}",
                     FileWrapper(open(self.args.image.src, "rb")),
                     self.args.image.format.mime(),
-                )
-            }
+                ),
+            },
         )
 
         if not self.api.post(
@@ -276,7 +279,7 @@ class KanidmOAuth(object):
             oauth_name=self.args.name,
             attrs={
                 ATTR_OAUTH2_ALLOW_INSECURE_CLIENT_DISABLE_PKCE: [
-                    str(self.args.pkce).lower()
+                    str(self.args.pkce).lower(),
                 ],
             },
         )
@@ -290,7 +293,7 @@ class KanidmOAuth(object):
             oauth_name=self.args.name,
             attrs={
                 ATTR_OAUTH2_JWT_LEGACY_CRYPTO_ENABLE: [
-                    str(self.args.legacy_crypto).lower()
+                    str(self.args.legacy_crypto).lower(),
                 ],
             },
         )
@@ -304,7 +307,7 @@ class KanidmOAuth(object):
             oauth_name=self.args.name,
             attrs={
                 ATTR_OAUTH2_PREFER_SHORT_USERNAME: [
-                    str(self.args.username == PrefUsername.short).lower()
+                    str(self.args.username == PrefUsername.short).lower(),
                 ],
             },
         )
@@ -318,8 +321,8 @@ class KanidmOAuth(object):
             oauth_name=self.args.name,
             attrs={
                 ATTR_OAUTH2_ALLOW_LOCALHOST_REDIRECT: [
-                    str(self.args.local_redirect).lower()
-                ]
+                    str(self.args.local_redirect).lower(),
+                ],
             },
         )
 
@@ -332,7 +335,7 @@ class KanidmOAuth(object):
             oauth_name=self.args.name,
             attrs={
                 ATTR_OAUTH2_STRICT_REDIRECT_URI: [
-                    str(self.args.strict_redirect).lower()
+                    str(self.args.strict_redirect).lower(),
                 ],
             },
         )

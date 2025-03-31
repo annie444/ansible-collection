@@ -1,7 +1,8 @@
+import importlib
 import os
+
 from pathlib import Path
 from pprint import pprint
-import importlib
 from typing import List, Tuple
 
 
@@ -13,7 +14,7 @@ def filter_dir(base_dir) -> tuple[list[str], list[Path]]:
             files.append(
                 str(file.relative_to(Path(os.path.dirname(__file__))))
                 .replace("/", ".")
-                .replace(".py", "")
+                .replace(".py", ""),
             )
         if file.is_dir() and not file.name.startswith("__"):
             dirs.append(file)
@@ -31,15 +32,18 @@ def write_doc(doc: str, plug: str, module):
     document = document.replace('"', "'")
     document = "\n".join([f"      {line}" for line in document.split("\n")])
     with open(
-        f"{os.path.dirname(__file__)}/plugins/doc_fragments/{frag_name}.py", "w"
+        f"{os.path.dirname(__file__)}/plugins/doc_fragments/{frag_name}.py",
+        "w",
     ) as f:
-        f.write(f'''
+        f.write(
+            f'''
 class ModuleDocFragment(object):
     DOCUMENTATION = r"""
     options:
 {document}
     """
-            ''')
+            '''
+        )
     return
 
 

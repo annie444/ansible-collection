@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, annotations, division, print_function
 
+
 __metaclass__ = type  # pylint: disable=C0103
 
 DOCUMENTATION = r"""
@@ -63,17 +64,13 @@ responses:
 
 from ansible.module_utils.basic import AnsibleModule  # pylint: disable=E0401  # noqa: E402
 from ansible.module_utils.basic import missing_required_lib  # pylint: disable=E0401  # noqa: E402
+
 from ..module_utils.kanidm.arg_specs.person import (  # pylint: disable=E0401  # noqa: E402
-    KanidmPersonArgs,
-    HAS_YAML,
-    YAML_IMP_ERR,
     HAS_ENUM,
+    HAS_YAML,
     STR_ENUM_IMP_ERR,
-)
-from ..module_utils.kanidm.runner.person import KanidmPerson  # pylint: disable=E0401  # noqa: E402
-from ..module_utils.kanidm.runner.api import (  # pylint: disable=E0401  # noqa: E402
-    HAS_REQUESTS as RUN_HAS_REQ,
-    REQUESTS_IMP_ERR as RUN_REQ_IMP_ERR,
+    YAML_IMP_ERR,
+    KanidmPersonArgs,
 )
 from ..module_utils.kanidm.exceptions import (  # pylint: disable=E0401  # noqa: E402
     KanidmApiError,
@@ -84,6 +81,11 @@ from ..module_utils.kanidm.exceptions import (  # pylint: disable=E0401  # noqa:
     KanidmRequiredOptionError,
     KanidmUnexpectedError,
 )
+from ..module_utils.kanidm.runner.api import (  # pylint: disable=E0401  # noqa: E402
+    HAS_REQUESTS as RUN_HAS_REQ,
+)
+from ..module_utils.kanidm.runner.api import REQUESTS_IMP_ERR as RUN_REQ_IMP_ERR
+from ..module_utils.kanidm.runner.person import KanidmPerson  # pylint: disable=E0401  # noqa: E402
 
 
 def run_module():

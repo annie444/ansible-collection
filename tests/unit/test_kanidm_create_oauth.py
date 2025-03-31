@@ -1,15 +1,16 @@
 import json
-import unittest
 import os
-from pathlib import Path
 import sys
+import unittest
+
 from datetime import datetime
-
-from ansible_collections.annie444.base.plugins.modules import kanidm_create_oauth
-
+from pathlib import Path
 from unittest.mock import patch
+
 from ansible.module_utils import basic
 from ansible.module_utils.common.text.converters import to_bytes
+
+from ansible_collections.annie444.base.plugins.modules import kanidm_create_oauth
 
 
 def set_module_args(args):
@@ -146,7 +147,7 @@ class TestKanidmOauthModule(unittest.TestCase):
                     "url": "https://testauth.local",
                     "redirect_url": ["https://testauth.local/callback"],
                     "scopes": ["openid", "profile", "email"],
-                }
+                },
             )
             kanidm_create_oauth.main()
         raised = ej.exception
@@ -170,7 +171,7 @@ class TestKanidmOauthModule(unittest.TestCase):
                     "url": "https://testnonexistetclient.local",
                     "redirect_url": ["https://testnonexistetclient.local/callback"],
                     "scopes": ["openid", "profile", "email"],
-                }
+                },
             )
             kanidm_create_oauth.main()
         raised = ej.exception
@@ -194,7 +195,7 @@ class TestKanidmOauthModule(unittest.TestCase):
                     "url": "https://testexistingclient.local",
                     "redirect_url": ["https://testexistingclient.local/callback"],
                     "scopes": ["openid", "profile", "email"],
-                }
+                },
             )
             kanidm_create_oauth.main()
         raised = ej.exception
@@ -221,9 +222,9 @@ class TestKanidmOauthModule(unittest.TestCase):
                         {
                             "group": "idm_admins",
                             "scopes": ["openid", "profile", "email"],
-                        }
+                        },
                     ],
-                }
+                },
             )
             kanidm_create_oauth.main()
         raised = ej.exception
@@ -248,7 +249,7 @@ class TestKanidmOauthModule(unittest.TestCase):
                     "group": "idm_admins",
                     "redirect_url": ["https://testdifferentgroup.local/callback"],
                     "scopes": ["openid", "profile", "email"],
-                }
+                },
             )
             kanidm_create_oauth.main()
         raised = ej.exception
@@ -286,7 +287,7 @@ class TestKanidmOauthModule(unittest.TestCase):
                         "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
                         "verify_ca": False,
                     },
-                }
+                },
             )
             kanidm_create_oauth.main()
         raised = ej.exception
@@ -357,7 +358,7 @@ class TestKanidmOauthModule(unittest.TestCase):
                         "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
                         "verify_ca": False,
                     },
-                }
+                },
             )
             kanidm_create_oauth.main()
         raised = ej.exception
@@ -428,7 +429,7 @@ class TestKanidmOauthModule(unittest.TestCase):
                         "password": "aSLXKGvBjCad9q6jh22y3dfk8pzZJ3VhFf7VW6NkDv6ZKUvp",
                         "verify_ca": False,
                     },
-                }
+                },
             )
             kanidm_create_oauth.main()
         raised = ej.exception

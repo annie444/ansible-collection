@@ -2,9 +2,7 @@ import requests
 
 
 def main():
-    url = (
-        "https://github.com/kanidm/kanidm/raw/refs/heads/master/proto/src/constants.rs"
-    )
+    url = "https://github.com/kanidm/kanidm/raw/refs/heads/master/proto/src/constants.rs"
     response = requests.get(url)
     attrs = []
     for line in response.text.split("\n"):
@@ -23,7 +21,8 @@ def main():
             line = line.replace("usize", "int")
             line = line.replace("Duration::from_secs(", "timedelta(seconds=")
             line = line.replace(
-                "use std::time::Duration", "from datetime import timedelta\nimport os"
+                "use std::time::Duration",
+                "from datetime import timedelta\nimport os",
             )
             line = line.replace("Duration", "timedelta")
             line = line.replace("#!", "###")

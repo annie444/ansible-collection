@@ -1,24 +1,24 @@
 from __future__ import annotations, division
 
-
-from pathlib import Path
-import tempfile
-from base64 import b64decode
-import gzip
-import zlib
 import bz2
-import tarfile
-import zipfile
+import gzip
 import os
-from ansible.module_utils.compat.typing import Any
+import tarfile
+import tempfile
+import zipfile
+import zlib
+
+from base64 import b64decode
+from pathlib import Path
 
 from ansible.module_utils.common.validation import (
     check_type_bool,
-    check_type_list,
-    check_type_int,
-    check_type_str,
     check_type_dict,
+    check_type_int,
+    check_type_list,
+    check_type_str,
 )
+from ansible.module_utils.compat.typing import Any
 
 
 def decode_file(content: bytes, header: list[bytes]) -> str:

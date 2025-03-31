@@ -1,5 +1,7 @@
 from __future__ import absolute_import, annotations, division, print_function
 
+from urllib.parse import urlencode
+
 from ..arg_specs.person import (
     KanidmPersonArgs,
 )
@@ -9,8 +11,7 @@ from ..exceptions import (
     KanidmRequiredOptionError,
 )
 from .api import KanidmApi
-from .attrs import ATTR_NAME, ATTR_UUID, ATTR_DISPLAYNAME
-from urllib.parse import urlencode
+from .attrs import ATTR_DISPLAYNAME, ATTR_NAME, ATTR_UUID
 
 
 class KanidmPerson(object):
@@ -23,23 +24,23 @@ class KanidmPerson(object):
 
         if not self.api.check_token():
             raise KanidmAuthenticationFailure(
-                "Unable to establish an authenticated connection with the kanidm server"
+                "Unable to establish an authenticated connection with the kanidm server",
             )
 
         if not self.get_person():
             if not self.make_person():
                 raise KanidmModuleError(
-                    f"Unable to create or get person {self.args.name}. Got {self.api.error}"
+                    f"Unable to create or get person {self.args.name}. Got {self.api.error}",
                 )
 
         if not self.get_person():
             raise KanidmModuleError(
-                f"Unable to get person {self.args.name}. Got {self.api.error}"
+                f"Unable to get person {self.args.name}. Got {self.api.error}",
             )
 
         if not self.credential_update_url():
             raise KanidmModuleError(
-                f"Unable to get credential update URL for person {self.args.name}. Got {self.api.error}"
+                f"Unable to get credential update URL for person {self.args.name}. Got {self.api.error}",
             )
 
         return self.api.text
@@ -72,7 +73,7 @@ class KanidmPerson(object):
                 json={
                     "attrs": {
                         ATTR_NAME: [self.args.name],
-                    }
+                    },
                 },
             )
         else:
@@ -83,7 +84,7 @@ class KanidmPerson(object):
                     "attrs": {
                         ATTR_NAME: [self.args.name],
                         ATTR_DISPLAYNAME: [self.args.display_name],
-                    }
+                    },
                 },
             )
 
@@ -94,5 +95,7 @@ class KanidmPerson(object):
         ):
             return False
 
-        self.api.text = f"{self.api.args.uri}/ui/reset?{urlencode({'token': self.api.json['token']})}"
+        self.api.text = (
+            f"{self.api.args.uri}/ui/reset?{urlencode({'token': self.api.json['token']})}"
+        )
         return True

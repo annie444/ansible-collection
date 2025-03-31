@@ -1,9 +1,10 @@
 from __future__ import absolute_import, annotations, division, print_function
 
-from dataclasses import dataclass
 import traceback
 
-from ansible.module_utils.compat.typing import FrozenSet, Optional, List
+from dataclasses import dataclass
+
+from ansible.module_utils.compat.typing import FrozenSet, List, Optional
 
 from ...ansible_specs import (
     AnsibleArgumentSpec,
@@ -15,6 +16,7 @@ from ..exceptions import (
     KanidmArgsException,
     KanidmRequiredOptionError,
 )
+from .conf import KanidmConf
 from .oauth_sub import (
     ClaimJoin,
     CustomClaim,
@@ -23,7 +25,7 @@ from .oauth_sub import (
     Scope,
     SupScope,
 )
-from .conf import KanidmConf
+
 
 STR_ENUM_IMP_ERR = None
 try:
@@ -100,72 +102,78 @@ class KanidmOauthArgs:
                 raise KanidmRequiredOptionError("url is required")
             if "redirect_url" in kwargs:
                 self.redirect_url = Verify(
-                    kwargs.get("redirect_url"), "redirect_url"
+                    kwargs.get("redirect_url"),
+                    "redirect_url",
                 ).verify_list_str()
             else:
                 raise KanidmRequiredOptionError("redirect_url is required")
             if "scopes" in kwargs:
                 self.scopes = [
-                    Scope(s)
-                    for s in Verify(kwargs.get("scopes"), "scopes").verify_list_str()
+                    Scope(s) for s in Verify(kwargs.get("scopes"), "scopes").verify_list_str()
                 ]
             else:
                 raise KanidmRequiredOptionError("scopes is required")
             if "kanidm" in kwargs:
                 self.kanidm = KanidmConf(
-                    **Verify(kwargs.get("kanidm"), "kanidm").verify_dict()
+                    **Verify(kwargs.get("kanidm"), "kanidm").verify_dict(),
                 )
             else:
                 raise KanidmRequiredOptionError("kanidm is required")
             if "display_name" in kwargs:
                 self.display_name = Verify(
-                    kwargs.get("display_name", self.name), "display_name"
+                    kwargs.get("display_name", self.name),
+                    "display_name",
                 ).verify_str()
             if "group" in kwargs:
                 self.group = Verify(kwargs.get("group"), "group").verify_default_str(
-                    "idm_all_persons"
+                    "idm_all_persons",
                 )
             if "public" in kwargs:
                 self.public = Verify(
-                    kwargs.get("public"), "public"
+                    kwargs.get("public"),
+                    "public",
                 ).verify_default_bool(False)
             if "claim_join" in kwargs:
                 self.claim_join = ClaimJoin(
                     Verify(kwargs.get("claim_join"), "claim_join").verify_default_str(
-                        ClaimJoin.array
-                    )
+                        ClaimJoin.array,
+                    ),
                 )
             if "pkce" in kwargs:
                 self.pkce = Verify(kwargs.get("pkce"), "pkce").verify_default_bool(True)
             if "legacy_crypto" in kwargs:
                 self.legacy_crypto = Verify(
-                    kwargs.get("legacy_crypto"), "legacy_crypto"
+                    kwargs.get("legacy_crypto"),
+                    "legacy_crypto",
                 ).verify_default_bool(False)
             if "strict_redirect" in kwargs:
                 self.strict_redirect = Verify(
-                    kwargs.get("strict_redirect"), "strict_redirect"
+                    kwargs.get("strict_redirect"),
+                    "strict_redirect",
                 ).verify_default_bool(True)
             if "local_redirect" in kwargs:
                 self.local_redirect = Verify(
-                    kwargs.get("local_redirect"), "local_redirect"
+                    kwargs.get("local_redirect"),
+                    "local_redirect",
                 ).verify_default_bool(False)
             if "username" in kwargs:
                 username = Verify(
-                    kwargs.get("username"), "username"
+                    kwargs.get("username"),
+                    "username",
                 ).verify_default_str(PrefUsername.spn)
                 self.username = PrefUsername(username)
             if "sup_scopes" in kwargs:
                 sup_scopes: list[dict] | None = Verify(
-                    kwargs.get("sup_scopes"), "sup_scopes"
+                    kwargs.get("sup_scopes"),
+                    "sup_scopes",
                 ).verify_opt_list_dict()
                 self.sup_scopes = (
-                    [SupScope(**scope) for scope in sup_scopes]
-                    if sup_scopes is not None
-                    else None
+                    [SupScope(**scope) for scope in sup_scopes] if sup_scopes is not None else None
                 )
             if "custom_claims" in kwargs:
                 cc = Verify(
-                    kwargs.get("custom_claims"), "custom_claims"
+                    kwargs.get("custom_claims"),
+                    "custom_claims",
                 ).verify_opt_list_dict()
                 if cc is None:
                     self.custom_claims = None
@@ -176,7 +184,7 @@ class KanidmOauthArgs:
                 self.image = Image(**img) if img is not None else None
             if "debug" in kwargs:
                 self.debug = Verify(kwargs.get("debug"), "debug").verify_default_bool(
-                    False
+                    False,
                 )
         except TypeError as e:
             raise KanidmArgsException(str(e), e)
@@ -194,12 +202,12 @@ class KanidmOauthArgs:
 
         if not self.public and self.local_redirect:
             raise KanidmArgsException(
-                "Local redirects are only allowed for public clients"
+                "Local redirects are only allowed for public clients",
             )
 
         if self.local_redirect and not self.strict_redirect:
             raise KanidmArgsException(
-                "Local redirects require strict redirect validation"
+                "Local redirects require strict redirect validation",
             )
 
     @staticmethod
@@ -366,11 +374,7 @@ class KanidmOauthArgs:
             for values in enumerate(kanidm_full_spec["mutually_exclusive"]):
                 mutually_exclusive.append([])
                 for item in values:
-                    if (
-                        isinstance(item, list)
-                        or isinstance(item, tuple)
-                        or isinstance(item, set)
-                    ):
+                    if isinstance(item, list) or isinstance(item, tuple) or isinstance(item, set):
                         for v in item:
                             mutually_exclusive[-1].append(f"kanidm.{v}")
                     else:
